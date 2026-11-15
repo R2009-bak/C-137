@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NASA Spacecraft: Moon and Mars</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@700&family=Unbounded:wght@600;700&family=Manrope:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: quiet realistic space, loud comic-book mission files.
+   IDEA: a ship's viewport — pick a world, fly in, meet the spacecraft, open its comic.
+   PICTURE: shader-rendered Moon and Mars; zoomed horizon with large illustrated spacecraft.
+   COLOUR and TYPE: black sky, lunar silver, Martian rust; comic panels in black, cream and saber-yellow; Bangers + Comic Neue, Unbounded for the title.
+   LAYOUT: planets fill the first screen; after zoom, horizon left and a tilted comic panel right (bottom on phones). */
+:root{color-scheme:dark;--bg:#04050a;--ink:#eef0f6;--mute:#9aa3b5;--y:#ffe81f;--cream:#f6f1e1;--k:#0a0a0a;--glass:rgba(12,14,22,.74)}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Manrope,system-ui,sans-serif;overflow:hidden}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block}
+.hero{position:fixed;top:0;left:0;right:0;padding:clamp(20px,4vw,48px) max(5vw,16px);pointer-events:none}
+h1{font:700 clamp(26px,4.2vw,50px)/1.05 Unbounded,system-ui,sans-serif;margin:0;max-width:16ch;text-wrap:balance}
+.hero p{color:var(--mute);margin:12px 0 0;max-width:40ch}
+.pick{position:fixed;left:0;top:0;border:0;border-radius:50%;background:transparent;cursor:pointer;padding:0}
+.pick:focus-visible{outline:2px solid var(--y);outline-offset:6px}
+.plabel{position:fixed;left:0;top:0;text-align:center;pointer-events:none;white-space:nowrap}
+.plabel>div{transform:translateX(-50%)}
+.plabel b{display:block;font:600 20px/1.2 Unbounded,sans-serif}
+.plabel span{color:var(--mute);font-size:14px}
+.pill{position:fixed;height:44px;padding:0 18px;border-radius:22px;border:1px solid rgba(255,255,255,.16);background:var(--glass);backdrop-filter:blur(10px);color:var(--ink);font:700 15px Manrope,sans-serif;display:flex;align-items:center;gap:10px;white-space:nowrap}
+#back{top:16px;left:16px;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .4s;z-index:6}
+#back.on{opacity:1;pointer-events:auto}
+#back:focus-visible,.craft:focus-visible .chip,.tab:focus-visible,.cta:focus-visible{outline:2px solid var(--y);outline-offset:3px}
+#hint{left:0;top:0;pointer-events:none;opacity:0;transition:opacity .5s;z-index:3}
+#hint.on{opacity:1}
+#hint i{width:10px;height:10px;border-radius:50%;background:var(--y);box-shadow:0 0 0 0 rgba(255,232,31,.7);animation:ping 1.6s infinite}
+@keyframes ping{70%{box-shadow:0 0 0 12px rgba(255,232,31,0)}100%{box-shadow:0 0 0 0 rgba(255,232,31,0)}}
+#homehint{left:50%;bottom:22px;transform:translateX(-50%);pointer-events:none;transition:opacity .4s}
+
+/* spacecraft */
+.craft{position:fixed;left:0;top:0;width:0;height:0;padding:0;border:0;background:none;cursor:pointer;color:var(--k);opacity:0;pointer-events:none}
+.craft .in{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:10px;transform:translate(-50%,-50%)}
+.craft.land .in{flex-direction:column-reverse;transform:translate(-50%,-100%)}
+.bob{display:block}
+.craft.fly .bob{animation:bob 6s ease-in-out infinite}
+#c-kepler .bob{animation-duration:7.5s;animation-direction:reverse}
+@keyframes bob{50%{transform:translateY(-10px) rotate(1.5deg)}}
+.craft svg,.craft img{width:var(--w,160px);height:auto;display:block;filter:drop-shadow(0 10px 18px rgba(0,0,0,.65));transition:filter .25s,transform .25s;transform-origin:50% 100%}
+.craft:hover svg,.craft:focus-visible svg,.craft:hover img,.craft:focus-visible img{filter:drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 5px var(--y)) drop-shadow(0 0 18px rgba(255,232,31,.6));transform:scale(1.04)}
+.chip{font:400 18px/1 Bangers,Impact,sans-serif;letter-spacing:1px;padding:7px 12px 5px;background:var(--cream);color:var(--k);border:2px solid var(--k);box-shadow:3px 3px 0 var(--k);white-space:nowrap;transition:background .2s}
+.craft:hover .chip,.craft.on .chip{background:var(--y)}
+
+/* comic card */
+#card{position:fixed;right:clamp(14px,2.4vw,32px);top:50%;width:min(350px,92vw);max-height:90vh;overflow:auto;padding:18px 18px 20px;
+ background:#10121a radial-gradient(rgba(255,232,31,.13) 1.1px,transparent 1.5px) 0 0/7px 7px;
+ border:4px solid var(--cream);outline:3px solid var(--k);box-shadow:10px 10px 0 var(--k);
+ opacity:0;pointer-events:none;transform:translate(30px,-50%) rotate(1deg);transition:opacity .45s,transform .45s;z-index:4;color:var(--k)}
+#card.on{opacity:1;pointer-events:auto;transform:translate(0,-50%) rotate(-.8deg)}
+.file{display:inline-block;background:var(--k);color:var(--y);font:700 12px/1 'Comic Neue',sans-serif;text-transform:uppercase;letter-spacing:1.5px;padding:6px 9px;border:2px solid var(--y)}
+#card h2{font:400 50px/.95 Bangers,Impact,sans-serif;letter-spacing:2px;color:var(--y);margin:10px 0 12px;text-shadow:3px 3px 0 var(--k),-1px -1px 0 var(--k),1px -1px 0 var(--k),-1px 1px 0 var(--k)}
+.cap{background:var(--y);border:2px solid var(--k);box-shadow:4px 4px 0 var(--k);padding:9px 11px;font:700 14px/1.35 'Comic Neue',sans-serif;text-transform:uppercase;transform:rotate(-1deg);margin:0 0 14px}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 14px}
+.stats div{background:var(--cream);border:2px solid var(--k);padding:6px 8px 5px}
+.stats dt{font:700 11px/1.2 'Comic Neue',sans-serif;text-transform:uppercase;color:#5b5648}
+.stats dd{margin:2px 0 0;font:400 20px/1.05 Bangers,Impact,sans-serif;letter-spacing:.5px}
+.bubble{position:relative;background:#fff;border:2px solid var(--k);border-radius:18px;padding:9px 12px;font:700 14px/1.35 'Comic Neue',sans-serif;margin:0 0 16px}
+.bubble::after{content:"";position:absolute;left:26px;bottom:-12px;border:10px solid transparent;border-top-color:var(--k);border-bottom:0}
+.twist{font:700 13px/1.35 'Comic Neue',sans-serif;color:var(--cream);margin:0 0 14px}
+.twist b{display:inline-block;background:#e0262b;color:#fff;font:400 15px/1 Bangers,sans-serif;letter-spacing:1px;padding:4px 7px 2px;margin-right:6px;transform:rotate(-3deg);border:2px solid var(--k)}
+.fx{position:absolute;right:10px;top:8px;width:96px;height:72px;pointer-events:none}
+.fx text{font:400 20px Bangers,Impact,sans-serif;letter-spacing:1px}
+.cta{width:100%;min-height:46px;border:2px solid var(--k);background:var(--y);color:var(--k);font:400 22px/1 Bangers,Impact,sans-serif;letter-spacing:1.5px;box-shadow:4px 4px 0 var(--k);cursor:pointer}
+.cta:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--k)}
+.tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;padding-right:84px}
+.tab{min-height:40px;padding:0 14px;border:2px solid var(--k);background:var(--cream);color:var(--k);font:400 18px/1 Bangers,sans-serif;letter-spacing:1px;cursor:pointer;box-shadow:3px 3px 0 var(--k)}
+.tab.on{background:var(--y)}
+#toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px) rotate(-2deg);background:var(--y);color:var(--k);border:3px solid var(--k);box-shadow:6px 6px 0 var(--k);padding:10px 16px;font:400 24px/1 Bangers,sans-serif;letter-spacing:1px;opacity:0;pointer-events:none;transition:.3s;z-index:9}
+#toast.on{opacity:1;transform:translate(-50%,0) rotate(-2deg)}
+.nogl .pick.moon{background:radial-gradient(circle at 35% 35%,#d9d9d4,#77766f 60%,#2a2a28)}
+.nogl .pick.jupiter{background:repeating-linear-gradient(#e8d6b8 0 8%,#b98a5e 8% 14%)}.nogl .pick.sun{background:radial-gradient(#fff3c0,#ff9a2a 70%,#c24a10)}
+.plabel.side>div{transform:none;text-align:left}.plabel.left>div{transform:translateX(-100%);text-align:right}
+@media(max-width:720px){
+ #card{left:10px;right:10px;width:auto;top:auto;bottom:10px;max-height:50vh;transform:translateY(30px);padding:14px 14px 16px;box-shadow:6px 6px 0 var(--k)}
+ #card.on{transform:rotate(-.5deg)}
+ #card h2{font-size:38px}
+ .fx{width:80px;height:60px}
+ .chip{font-size:15px}
+}
+@media(prefers-reduced-motion:reduce){.craft.fly .bob,#hint i{animation:none}}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<header class="hero" id="hero">
+ <h1>Three NASA explorers, three destinations</h1>
+ <p>Pick a world — we'll fly in and meet the spacecraft that went there.</p>
+</header>
+<div class="pill" id="homehint"><i style="width:8px;height:8px;border-radius:50%;background:var(--y)"></i>Click a world to fly closer</div>
+
+<button class="pick moon" id="p-moon" data-p="moon" aria-label="The Moon"></button>
+<button class="pick jupiter" id="p-jupiter" data-p="jupiter" aria-label="Jupiter"></button>
+<button class="pick sun" id="p-sun" data-p="sun" aria-label="The Sun"></button>
+<div class="plabel" id="l-moon"><div><b>The Moon</b><span>Surveyor 3 · landed 1967</span></div></div>
+<div class="plabel" id="l-jupiter"><div><b>Jupiter</b><span>Pioneer 10 · flyby 1973</span></div></div>
+<div class="plabel" id="l-sun"><div><b>The Sun</b><span>Kepler · since 2009</span></div></div>
+
+<button class="pill" id="back">← Back to all worlds</button>
+<div class="pill" id="hint"><i></i><span id="hintTxt">Click a spacecraft to learn more</span></div>
+
+<!-- SURVEYOR 3 -->
+<button class="craft land" id="c-surveyor" data-k="surveyor" aria-label="Surveyor 3 — open its comic"><span class="in"><span class="bob"><img src="craft-surveyor.png" alt=""></span><span class="chip">Surveyor 3</span></span></button>
+
+<!-- PIONEER 10 -->
+<button class="craft fly" id="c-pioneer" data-k="pioneer" aria-label="Pioneer 10 — open its comic"><span class="in"><span class="bob"><img src="craft-pioneer.png" alt=""></span><span class="chip">Pioneer 10</span></span></button>
+
+<!-- KEPLER -->
+<button class="craft fly" id="c-kepler" data-k="kepler" aria-label="Kepler — open its comic"><span class="in"><span class="bob"><img src="craft-kepler.png" alt=""></span><span class="chip">Kepler</span></span></button>
+
+<aside id="card" aria-live="polite"></aside>
+<div id="toast" role="status"></div>
+
+<script>
+{
+/* Paste each comic's link here when it is ready */
+const COMIC={surveyor:'comic-surveyor.html',pioneer:'comic-pioneer.html',kepler:'comic-kepler.html'};
+
+const C={
+ surveyor:{name:'Surveyor 3',file:'Mission file 01 · The Moon',fx:'BOING!',
+  cap:'April 1967. A robot lander touches down in the Ocean of Storms — but its engine fails to cut off, and it bounces twice before settling.',
+  stats:[['Launched','Apr 17, 1967'],['Landed','Apr 20, 1967'],['Photos sent','6,326'],['Mass','~998 kg']],
+  bub:'My scoop proved the soil could hold an Apollo lander. In 1969, Apollo 12 astronauts came to visit — and took my camera home!'},
+ pioneer:{name:'Pioneer 10',file:'Mission file 02 · Jupiter',fx:'WHOOSH!',
+  cap:'March 1972. The first spacecraft to fly beyond Mars, through the asteroid belt, and past Jupiter.',
+  stats:[['Launched','Mar 2, 1972'],['Jupiter flyby','Dec 4, 1973'],['Last signal','Jan 23, 2003'],['Power','2 nuclear RTGs']],
+  bub:'Now I’m heading for the red star Aldebaran. ETA: about two million years.',
+  twist:'Pioneer 10 crossed the asteroid belt and flew past Jupiter before anyone else.'},
+ kepler:{name:'Kepler',file:'Mission file 03 · Around the Sun',fx:'BLINK!',
+  cap:'March 2009. A space telescope that watches stars dim as planets pass in front of them.',
+  stats:[['Launched','Mar 6, 2009'],['Retired','Oct 30, 2018'],['Planets found','2,600+'],['Stars surveyed','500,000+']],
+  bub:'I showed there are more planets than stars in our night sky!',
+  twist:'Kepler circled the Sun, trailing behind Earth — and stared at faraway stars, not at the Sun.'}
+};
+const PL={moon:['surveyor'],jupiter:['pioneer'],sun:['kepler']};
+const $=s=>document.querySelector(s);
+const cv=$('#gl'),card=$('#card'),back=$('#back'),hero=$('#hero'),hint=$('#hint'),homehint=$('#homehint'),toast=$('#toast');
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const HOVER=matchMedia('(hover: hover)').matches;
+if(!HOVER)$('#hintTxt').textContent='Tap a spacecraft to learn more';
+const DUR=RM?0.01:1.6;
+
+const FS=`precision highp float;
+uniform vec2 uRes;uniform float uTime;uniform vec4 uP0;uniform vec4 uP1;uniform vec4 uP2;uniform vec2 uS0;uniform vec2 uS1;uniform vec2 uS2;
+float h1(vec3 p){p=fract(p*0.3183099+0.1);p*=17.0;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}
+float noise(vec3 x){vec3 i=floor(x);vec3 f=fract(x);f=f*f*(3.0-2.0*f);
+return mix(mix(mix(h1(i),h1(i+vec3(1,0,0)),f.x),mix(h1(i+vec3(0,1,0)),h1(i+vec3(1,1,0)),f.x),f.y),
+mix(mix(h1(i+vec3(0,0,1)),h1(i+vec3(1,0,1)),f.x),mix(h1(i+vec3(0,1,1)),h1(i+vec3(1,1,1)),f.x),f.y),f.z);}
+float fbm(vec3 p){float a=0.5;float s=0.0;for(int i=0;i<6;i++){s+=a*noise(p);p=p*2.03+vec3(1.7,9.2,3.1);a*=0.5;}return s;}
+vec3 h3(vec3 p){return vec3(h1(p),h1(p+19.1),h1(p+47.7));}
+float hs(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+void crater(vec3 p,float sc,float dens,vec3 L,inout float alb,inout float sh){
+ vec3 q=p*sc;vec3 i=floor(q);vec3 f=fract(q);
+ for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++)for(int z=-1;z<=1;z++){
+  vec3 g=vec3(float(x),float(y),float(z));vec3 r=h3(i+g);
+  if(r.z>dens)continue;
+  vec3 c=g+0.15+0.7*r-f;float rad=0.16+0.3*h1(i+g+5.3);float d=length(c);
+  if(d<rad*1.6){float t=d/rad;vec3 v=-c/max(d,0.0001);float l=dot(v,L);
+   if(t<1.0){sh+=-l*t*t*0.55;alb-=0.05*(1.0-t);}
+   else{float e=1.0-(t-1.0)/0.6;sh+=l*0.22*e*e;alb+=0.04*e;}}
+ }
+}
+vec3 moonC(vec3 p,vec3 Lt,float mu0,float mu){
+ float mare=smoothstep(0.5,0.62,fbm(p*1.2+vec3(3.0,1.0,7.0)));
+ float alb=mix(0.6,0.3,mare)+(fbm(p*5.0)-0.5)*0.14+(noise(p*40.0)-0.5)*0.05;
+ float sh=0.0;
+ crater(p,2.5,0.35,Lt,alb,sh);crater(p,6.0,0.4,Lt,alb,sh);crater(p,15.0,0.5,Lt,alb,sh);sh*=0.8;
+ float m0=max(mu0,0.0);float ls=m0/(m0+max(mu,0.05));
+ float lit=mix(m0,ls*1.6,0.55);float k=1.0+(1.0-m0)*2.0;
+ float b=alb*lit*clamp(1.0+sh*k,0.0,2.5)*smoothstep(-0.02,0.08,mu0);
+ return vec3(b)*vec3(1.05,1.0,0.94)*1.15+vec3(0.004,0.005,0.008);
+}
+vec3 jupC(vec3 p,float mu0,float mu){
+ float lat=p.y;float lon=atan(p.x,p.z);
+ vec3 q=p+vec3(fbm(p*vec3(2.0,9.0,2.0))*0.35,0.0,0.0);
+ float w=fbm(vec3(q.x*3.0,lat*14.0,q.z*3.0))*0.9;
+ float band=sin(lat*19.0+w*2.2);
+ vec3 cream=vec3(0.93,0.86,0.74),tan=vec3(0.72,0.5,0.32),brown=vec3(0.48,0.29,0.18),blue=vec3(0.62,0.66,0.72);
+ vec3 c=mix(cream,tan,smoothstep(-0.2,0.6,band));
+ c=mix(c,brown,smoothstep(0.75,1.0,band)*0.8);
+ c=mix(c,blue,smoothstep(0.9,1.0,-band)*0.25);
+ c*=0.9+0.2*fbm(p*vec3(6.0,30.0,6.0));
+ vec2 g=vec2((lon-0.6)*1.5,(lat+0.36)*5.2);float gd=length(g);
+ float sw=fbm(vec3(g*2.0,1.0))*0.3;
+ c=mix(c,mix(vec3(0.78,0.36,0.2),vec3(0.9,0.55,0.35),smoothstep(0.0,0.9,gd+sw)),smoothstep(1.05,0.75,gd+sw*0.5)*step(0.0,cos(lon-0.6)));
+ c=mix(c,vec3(0.86,0.8,0.7),smoothstep(0.85,0.95,abs(lat))*0.5);
+ float lit=clamp(mu0,0.0,1.0)*0.9+0.1*smoothstep(-0.1,0.2,mu0);
+ vec3 o=c*lit*1.15;
+ float limb=pow(1.0-max(mu,0.0),3.0);
+ return mix(o,o*0.55,limb*0.6);
+}
+vec3 sunC(vec3 p,float mu){
+ float g=fbm(p*14.0+vec3(0.0,0.0,uTime*0.05));float g2=fbm(p*40.0-vec3(uTime*0.03));
+ float ld=0.62+0.38*pow(max(mu,0.0),0.5);
+ vec3 c=mix(vec3(1.0,0.55,0.12),vec3(1.0,0.86,0.5),g*0.9+g2*0.3);
+ float spot=smoothstep(0.72,0.78,fbm(p*3.0+vec3(5.0)));
+ c=mix(c,vec3(0.35,0.12,0.03),spot*0.8);
+ return c*ld*1.25;
+}
+vec4 planet(vec2 fc,vec4 P,vec2 S,float kind,out vec3 glow){
+ glow=vec3(0.0);
+ if(S.y<0.005)return vec4(0.0);
+ vec2 d=(fc-P.xy)/P.z;float r2=dot(d,d);float rr=sqrt(r2);
+ vec3 Lv=normalize(vec3(-0.55,0.6,0.58));
+ if(rr>1.0){
+  if(kind>1.5){float g=exp(-(rr-1.0)*7.0)*0.55+exp(-(rr-1.0)*30.0)*0.6;glow=vec3(1.0,0.6,0.25)*g*S.y;}
+  else if(kind>0.5&&rr<1.2){float g=exp(-(rr-1.0)*70.0);float lt=smoothstep(-0.4,0.7,dot(d/rr,Lv.xy));glow=vec3(0.95,0.85,0.7)*g*lt*0.3*S.y;}
+  return vec4(0.0);
+ }
+ float aa=1.0-smoothstep(1.0-1.5/P.z,1.0,rr);
+ if(kind>1.5){aa=1.0;}
+ vec3 n=vec3(d,sqrt(max(1.0-r2,0.0)));
+ float ct=cos(P.w);float st=sin(P.w);float cr=cos(S.x);float sr=sin(S.x);
+ mat3 M=mat3(cr,0.0,sr,0.0,1.0,0.0,-sr,0.0,cr)*mat3(1.0,0.0,0.0,0.0,ct,-st,0.0,st,ct);
+ vec3 p=M*n;vec3 Lt=M*Lv;
+ float mu0=dot(n,Lv);float mu=n.z;
+ vec3 col=kind<0.5?moonC(p,Lt,mu0,mu):(kind<1.5?jupC(p,mu0,mu):sunC(p,mu));
+ return vec4(col*aa,aa*S.y);
+}
+vec3 sky(vec2 fc){
+ vec3 c=vec3(0.006,0.008,0.016);
+ float n=fbm(vec3(fc/900.0,0.7));c+=vec3(0.05,0.035,0.08)*pow(n,3.0)*2.0;
+ float s=0.0;
+ for(int k=0;k<3;k++){
+  float cs=90.0/pow(1.8,float(k));vec2 cell=floor(fc/cs);float h=hs(cell+float(k)*17.3);
+  if(h>0.9){vec2 o=vec2(hs(cell+3.1),hs(cell+7.7));vec2 sp=(cell+0.2+0.6*o)*cs;float dd=length(fc-sp);
+   float b=(h-0.9)*10.0*(1.0-0.2*float(k));float tw=0.75+0.25*sin(uTime*(0.6+3.0*o.x)+h*40.0);
+   s+=b*tw*(exp(-dd*dd/1.8)+0.12*exp(-dd/5.0));}
+ }
+ return c+vec3(s)*vec3(0.95,0.97,1.0);
+}
+void main(){
+ vec2 fc=gl_FragCoord.xy;vec3 g0;vec3 g1;vec3 g2;
+ vec4 a=planet(fc,uP0,uS0,0.0,g0);vec4 b=planet(fc,uP1,uS1,1.0,g1);vec4 c=planet(fc,uP2,uS2,2.0,g2);
+ float cov=(1.0-a.w)*(1.0-b.w)*(1.0-c.w);
+ vec3 col=sky(fc)*cov+a.rgb*uS0.y+b.rgb*uS1.y+c.rgb*uS2.y+(g1+g2)*(1.0-a.w)*(1.0-b.w)*(1.0-c.w*0.0);
+ gl_FragColor=vec4(col,1.0);
+}`;
+
+let gl=null,U={};
+try{gl=cv.getContext('webgl',{antialias:false});}catch(e){}
+if(gl){
+ const sh=(t,s)=>{const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))console.error(gl.getShaderInfoLog(o));return o};
+ const pr=gl.createProgram();
+ gl.attachShader(pr,sh(gl.VERTEX_SHADER,'attribute vec2 a;void main(){gl_Position=vec4(a,0.0,1.0);}'));
+ gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,FS));gl.linkProgram(pr);
+ if(!gl.getProgramParameter(pr,gl.LINK_STATUS)){console.error(gl.getProgramInfoLog(pr));gl=null}
+ else{
+  gl.useProgram(pr);
+  const bf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,bf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
+  ['uRes','uTime','uP0','uP1','uP2','uS0','uS1','uS2'].forEach(n=>U[n]=gl.getUniformLocation(pr,n));
+ }
+}
+if(!gl)document.body.classList.add('nogl');
+
+let W=0,H=0,dpr=1;
+function resize(){W=innerWidth;H=innerHeight;dpr=Math.min(devicePixelRatio||1,1.5);cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);if(gl)gl.viewport(0,0,cv.width,cv.height)}
+addEventListener('resize',resize);resize();
+
+const KEYS=['moon','jupiter','sun'];
+const mob=()=>W<720;
+function homeL(){
+ if(mob()){const r=Math.min(W*.17,H*.075);return{moon:{x:W*.27,y:H*.35,r},sun:{x:W*.38,y:H*.58,r:r*1.6},jupiter:{x:W*.68,y:H*.82,r:r*1.3}}}
+ const r=Math.min(W*.075,H*.13);return{moon:{x:W*.18,y:H*.6,r},sun:{x:W*.5,y:H*.55,r:r*1.9},jupiter:{x:W*.82,y:H*.6,r:r*1.45}}
+}
+function zoomL(){
+ const R=Math.max(W,H)*1.15;
+ if(mob()){const top=H*.46;return{x:W/2,y:top+R,r:R,top}}
+ const top=H*.64;return{x:Math.max(W*.3,(W-440)/2),y:top+R,r:R,top}
+}
+const lerp=(a,b,t)=>a+(b-a)*t;
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const sm=(a,b,x)=>{const t=Math.min(Math.max((x-a)/(b-a),0),1);return t*t*(3-2*t)};
+
+let state='home',cardFor=null,last=0,tt=0;
+const k={},hov={},hovT={},rot={moon:.4,jupiter:1.2,sun:0};KEYS.forEach(p=>{k[p]=0;hov[p]=0;hovT[p]=0});
+const els={};
+KEYS.forEach(p=>{els[p]={pick:$('#p-'+p),lab:$('#l-'+p)};
+ els[p].pick.addEventListener('click',()=>go(p));
+ els[p].pick.addEventListener('pointerenter',()=>hovT[p]=1);
+ els[p].pick.addEventListener('pointerleave',()=>hovT[p]=0);
+});
+const crafts={};
+Object.keys(C).forEach(id=>{
+ const el=crafts[id]=$('#c-'+id);
+ el.addEventListener('click',()=>openComic(id));
+ el.addEventListener('pointerenter',()=>{if(HOVER&&cardFor!==id)showCard(id)});
+ el.addEventListener('focus',()=>{if(cardFor!==id)showCard(id)});
+});
+back.addEventListener('click',()=>go('home'));
+addEventListener('keydown',e=>{if(e.key==='Escape'&&state!=='home')go('home')});
+card.addEventListener('click',e=>{const c=e.target.closest('.cta');if(c)openComic(c.dataset.k)});
+
+function openComic(id){
+ if(COMIC[id]){location.href=COMIC[id];return}
+ toast.textContent=C[id].name+' comic — coming soon!';toast.classList.add('on');
+ clearTimeout(tt);tt=setTimeout(()=>toast.classList.remove('on'),2200);
+}
+function go(s){
+ state=s;cardFor=null;card.classList.remove('on');
+ Object.values(crafts).forEach(c=>c.classList.remove('on'));
+ back.classList.toggle('on',s!=='home');
+ try{if(s==='home')history.replaceState(null,'',location.pathname+location.search);else location.hash=s}catch(e){}
+}
+const burst='M48 2 L56 22 L76 10 L70 30 L94 30 L76 42 L92 58 L68 54 L66 70 L52 56 L38 70 L34 52 L10 60 L24 42 L4 32 L26 28 L18 8 L40 20Z';
+function showCard(id){
+ const c=C[id];cardFor=id;
+ Object.entries(crafts).forEach(([k2,el])=>el.classList.toggle('on',k2===id));
+ card.innerHTML=`<svg class="fx" viewBox="0 0 96 72" aria-hidden="true"><path d="${burst}" fill="#e0262b" stroke="#0a0a0a" stroke-width="3" stroke-linejoin="round"/><text x="48" y="44" text-anchor="middle" fill="#ffe81f" stroke="#0a0a0a" stroke-width="1" transform="rotate(-8 48 40)">${c.fx}</text></svg>`+
+  `<span class="file">${c.file}</span><h2>${c.name}</h2><p class="cap">${c.cap}</p>`+
+  `<dl class="stats">${c.stats.map(([a,b])=>`<div><dt>${a}</dt><dd>${b}</dd></div>`).join('')}</dl>`+
+  `<p class="bubble">${c.bub}</p>`+(c.twist?`<p class="twist"><b>Did you know?</b>${c.twist}</p>`:'')+
+  `<button class="cta" data-k="${id}">Read the comic →</button>`;
+ card.scrollTop=0;card.classList.add('on');
+}
+function place(el,x,y,w,op){el.style.transform=`translate(${x}px,${y}px)`;el.style.setProperty('--w',w+'px');el.style.opacity=op;el.style.pointerEvents=op>.5?'auto':'none'}
+const cl=(v,a,b)=>Math.min(Math.max(v,a),b);
+
+function frame(now){
+ const t=now/1000,dt=Math.min(t-(last||t),.1);last=t;
+ KEYS.forEach(p=>{const tg=state===p?1:0;k[p]=Math.min(1,Math.max(0,k[p]+Math.sign(tg-k[p])*dt/DUR));hov[p]+=(hovT[p]-hov[p])*Math.min(1,dt*8)});
+ const E={};KEYS.forEach(p=>E[p]=ease(k[p]));
+ const ez=Math.max(...KEYS.map(p=>E[p])),hl=homeL(),zl=zoomL();
+ const sel=KEYS.find(p=>E[p]>0.001&&E[p]===ez);
+ const P={};
+ KEYS.forEach(p=>{
+  const e=E[p],h=hl[p],hs=1+.05*hov[p]*(1-ez);
+  let ax=0,ay=0,o=0;
+  if(sel&&sel!==p){o=E[sel];const s=hl[sel];if(mob()){ay=(h.y>=s.y?1:-1)*H*1.1}else{ax=(h.x>=s.x?1:-1)*W*1.1}}
+  P[p]={x:lerp(h.x,zl.x,e)+ax*o,y:lerp(h.y,zl.y,e)+ay*o,r:lerp(h.r*hs,zl.r,e),tilt:lerp(.35,p==='sun'?.2:1.22,e),a:1-o};
+  if(!RM)rot[p]+=dt*lerp(p==='moon'?.05:p==='jupiter'?.12:.02,.004,e);
+  const pk=els[p].pick,lb=els[p].lab,vis=1-ez;
+  pk.style.width=pk.style.height=h.r*2*hs+'px';pk.style.transform=`translate(${h.x-h.r*hs}px,${h.y-h.r*hs}px)`;
+  pk.style.opacity=gl?0:vis;pk.style.pointerEvents=vis>.5?'auto':'none';
+  if(mob()&&p!=='jupiter')lb.style.transform=`translate(${h.x+h.r*hs+14}px,${h.y-22}px)`;
+  else if(mob())lb.style.transform=`translate(${h.x-h.r*hs-14}px,${h.y-22}px)`;
+  else lb.style.transform=`translate(${h.x}px,${h.y+h.r*hs+18}px)`;
+  lb.classList.toggle('side',mob());lb.classList.toggle('left',mob()&&p==='jupiter');
+  lb.style.opacity=vis;
+ });
+ hero.style.opacity=1-ez;homehint.style.opacity=1-ez;
+ if(gl){
+  gl.uniform2f(U.uRes,cv.width,cv.height);gl.uniform1f(U.uTime,t);
+  KEYS.forEach((p,i)=>{gl.uniform4f(U['uP'+i],P[p].x*dpr,(H-P[p].y)*dpr,P[p].r*dpr,P[p].tilt);gl.uniform2f(U['uS'+i],rot[p],P[p].a)});
+  gl.drawArrays(gl.TRIANGLES,0,3);
+ }
+ const arcY=(pp,x)=>pp.y-Math.sqrt(Math.max(pp.r*pp.r-(x-pp.x)**2,0));
+ const sx=mob()?0:-W*.03;
+ place(crafts.surveyor,P.moon.x+sx,arcY(P.moon,P.moon.x+sx)+10,mob()?cl(W*.48,160,220):cl(W*.2,200,300),sm(.75,1,k.moon));
+ const top=zl.top;
+ if(mob()){
+  place(crafts.pioneer,W*.5,top-H*.22,cl(W*.5,170,230),sm(.75,1,k.jupiter));
+  place(crafts.kepler,W*.5,top-H*.2,cl(W*.75,240,320),sm(.75,1,k.sun));
+ }else{
+  place(crafts.pioneer,zl.x,top-H*.33,cl(W*.2,220,330),sm(.75,1,k.jupiter));
+  place(crafts.kepler,zl.x,top-H*.3,cl(W*.32,300,480),sm(.75,1,k.sun));
+ }
+ const hv=Math.max(...KEYS.map(p=>sm(.75,1,k[p])));
+ hint.classList.toggle('on',hv>.9);
+ if(mob())hint.style.transform=`translate(${W/2}px,70px) translateX(-50%)`;
+ else hint.style.transform=`translate(${zl.x}px,${zl.top+(H-zl.top)*.55}px) translateX(-50%)`;
+ if(state!=='home'&&k[state]>=1&&!cardFor)showCard(PL[state][0]);
+ requestAnimationFrame(frame);
+}
+const h0=(location.hash||'').slice(1);
+if(KEYS.includes(h0))go(h0);
+else if(h0==='mars')go('jupiter');
+requestAnimationFrame(frame);
+}
+</script>
+</body>
+</html>

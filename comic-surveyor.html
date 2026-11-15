@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The One Who Waited</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: quiet, lonely, then warm — a space-opera comic about a robot that waited.
+   IDEA: a printed comic page; SPACE turns on one panel at a time, like a reader's eye moving.
+   PICTURE: inked SVG panels on black gutters: lunar graphite, silver, vintage gold, white light.
+   COLOUR and TYPE: black page, cream-yellow captions, white balloons; Bangers + Comic Neue lettering.
+   LAYOUT: one chapter per page in a grid of 2–3 panels; stacked panels on phones. */
+:root{color-scheme:dark;--k:#000;--cap:#f1e3a6;--y:#ffe81f;--ink:#f4f1e8}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:#000;color:var(--ink);font:16px/1.4 'Comic Neue',system-ui,sans-serif;overflow:hidden}
+.page{position:fixed;inset:0 0 58px 0;padding:14px;display:grid;gap:14px;max-width:1440px;margin:0 auto;opacity:0;visibility:hidden;transition:opacity .6s,visibility .6s}
+.page.cur{opacity:1;visibility:visible}
+.panel{position:relative;overflow:hidden;background:#09090b;opacity:0;transform:scale(.97);filter:blur(10px);transition:opacity 1s ease,transform 1s ease,filter 1s ease}
+.panel.on{opacity:1;transform:none;filter:none}
+.a{grid-area:a}.b{grid-area:b}.c{grid-area:c}
+.art{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover}
+.panel.on img.kbi{animation:kbi 16s ease-out both}@keyframes kbi{from{transform:scale(1)}to{transform:scale(1.07)}}
+.panel.on img.kb{animation:kb2 10s ease-out both;transform-origin:62% 60%}@keyframes kb2{from{transform:scale(1)}to{transform:scale(1.3)}}
+.endt{position:absolute;left:4%;right:30%;top:7%;margin:0;text-align:left;font:400 clamp(34px,6vw,84px)/1 Bangers,Impact,sans-serif;letter-spacing:3px;color:var(--y);text-shadow:4px 4px 0 #000,-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000;opacity:0;transition:opacity 1.2s .8s}.panel.on .endt{opacity:1}
+.panel.on .night{animation:night 5s 1s ease-in both}
+.p1{grid-template-columns:1fr 2fr;grid-template-rows:1.25fr 1fr;grid-template-areas:"a b" "c c"}
+.p2{grid-template-columns:2fr 1fr;grid-template-rows:1.1fr 1fr;grid-template-areas:"a a" "b c"}
+.p3,.p4,.p6{grid-template-columns:1fr 1fr;grid-template-rows:1.15fr 1fr;grid-template-areas:"a b" "c c"}
+.p5{grid-template-columns:1fr;grid-template-rows:1.5fr 1fr;grid-template-areas:"a" "b"}
+.p7{grid-template-columns:1fr;grid-template-rows:1fr auto;grid-template-areas:"a" "b"}
+
+/* lettering */
+.bal{position:absolute;z-index:2;background:#fff;color:#000;border:2px solid #000;border-radius:50%;padding:16px 20px;font:700 clamp(12px,1.2vw,16px)/1.15 'Comic Neue',sans-serif;text-transform:uppercase;text-align:center;max-width:46%;opacity:0;transform:scale(.8);transition:opacity .5s .7s,transform .5s .7s}
+.bal::before,.bal::after{content:"";position:absolute;left:var(--tx,45%);width:0;height:0;border-style:solid;transform-origin:top center;transform:rotate(var(--tr,18deg))}
+.bal::before{top:100%;border-width:24px 9px 0;border-color:#000 transparent transparent;margin-top:-1px}
+.bal::after{top:100%;border-width:20px 6px 0;border-color:#fff transparent transparent;margin-top:-3px;margin-left:3px}
+.bal.up::before,.bal.up::after{top:auto;bottom:100%;transform-origin:bottom center;transform:rotate(calc(180deg + var(--tr,18deg)))}
+.bal.up::before{margin:0 0 -1px}.bal.up::after{margin:0 0 -3px 3px}
+.panel.on .bal{opacity:1;transform:none}
+.cap{position:absolute;z-index:2;background:var(--cap);color:#000;border:2px solid #000;padding:6px 10px;font:700 clamp(11px,1.05vw,15px)/1.2 'Comic Neue',sans-serif;text-transform:uppercase;max-width:62%;opacity:0;transition:opacity .5s .35s}
+.cap.chap{background:#000;color:var(--y);border-color:var(--y);font:400 clamp(15px,1.5vw,20px)/1 Bangers,Impact,sans-serif;letter-spacing:1.5px;padding:6px 10px 4px}
+.panel.on .cap{opacity:1}
+.hintp{position:absolute;z-index:3;left:50%;bottom:12px;transform:translateX(-50%);background:rgba(0,0,0,.75);border:2px solid var(--y);color:var(--y);padding:6px 12px;font:700 13px 'Comic Neue',sans-serif;text-transform:uppercase;white-space:nowrap;opacity:0;transition:opacity .4s 1.2s;pointer-events:none}
+.panel.on .hintp{opacity:1}
+.hintp.gone{opacity:0!important;transition-delay:0s}
+svg text.sfx{font-family:Bangers,Impact,sans-serif;paint-order:stroke;stroke:#000;stroke-linejoin:round}
+
+/* animations */
+.panel.on .print{animation:print 1s both}
+@keyframes print{from{opacity:0;transform:scale(1.15)}to{opacity:1;transform:none}}
+.fp{opacity:0}.panel.on .fp{animation:fp .5s both}
+@keyframes fp{to{opacity:1}}
+.panel.on .kb{animation:kb 9s ease-out both}
+@keyframes kb{from{transform:scale(1)}to{transform:scale(1.18)}}
+.kb{transform-origin:50% 72%;transform-box:view-box}
+.flame{animation:fl .12s infinite alternate}
+@keyframes fl{to{opacity:.65;transform:scaleY(.86)}}
+.flame{transform-box:fill-box;transform-origin:50% 0}
+.dust{opacity:0}.panel.on .dust{animation:dust 3.5s ease-out both}
+@keyframes dust{0%{opacity:.9;transform:scale(.6)}100%{opacity:0;transform:scale(1.6)}}
+.dust{transform-box:fill-box;transform-origin:50% 100%}
+.panel.on .night{animation:night 5s 1s ease-in both}
+@keyframes night{from{opacity:0}to{opacity:.88}}
+.panel.on .sunlit{animation:sunset 5s 1s ease-in both}
+@keyframes sunset{to{opacity:0}}
+.stbl{animation:tw 3s ease-in-out infinite alternate}
+@keyframes tw{to{opacity:.4}}
+
+/* interactive bits */
+.hit{cursor:pointer}
+#scoop{cursor:grab;touch-action:none;outline:none}#scoop:active{cursor:grabbing}
+#scoop:focus-visible{outline:none}#scoop:focus-visible circle{stroke:var(--y);stroke-width:4}
+.sci{position:absolute;z-index:3;right:14px;top:14px;width:min(320px,58%);background:var(--cap);color:#000;border:3px solid #000;box-shadow:6px 6px 0 #000;padding:10px 12px;font:700 13px/1.3 'Comic Neue',sans-serif;text-transform:uppercase;opacity:0;transform:translateY(-10px) rotate(1deg);transition:.5s;pointer-events:none}
+.sci b{display:block;font:400 22px/1 Bangers,sans-serif;letter-spacing:1px;margin-bottom:4px}
+.sci.on{opacity:1;transform:rotate(1deg)}
+.tv{position:absolute;inset:0;overflow:hidden;background:#000}
+.tv canvas{width:100%;height:100%;object-fit:cover;display:block}
+.tv span{position:absolute;inset:0;display:grid;place-items:center;font:400 clamp(20px,2.4vw,32px) Bangers,sans-serif;letter-spacing:2px;color:#fff;opacity:0;transition:opacity 1s}
+.tv.dead span{opacity:.85}
+.cal{position:absolute;left:8%;top:50%;transform:translateY(-50%) rotate(-3deg);width:min(200px,34%);aspect-ratio:4/5;background:#f4f1e8;border:3px solid #000;box-shadow:8px 8px 0 #000;color:#000;text-align:center;display:flex;flex-direction:column}
+.cal i{display:block;height:18%;background:#b8332e;border-bottom:3px solid #000}
+.cal b{flex:1;display:grid;place-items:center;font:400 clamp(30px,4.6vw,64px)/1 Bangers,sans-serif}
+.cal em{font:700 clamp(13px,1.3vw,18px) 'Comic Neue';font-style:normal;padding-bottom:10px}
+.pan{position:absolute;top:0;left:0;height:100%;will-change:transform}
+.pan{min-width:100%}.pan img{height:100%;width:auto;min-width:100%;object-fit:cover;display:block;max-width:none}
+.flyer{transition:transform 1.4s cubic-bezier(.6,.05,.4,1),opacity 1.4s}
+.flyer.go{transform:translate(30%,-30%) scale(.25) rotate(20deg);opacity:0}
+.flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:20;transition:opacity .25s}
+.flash.on{opacity:1;transition:none}
+
+/* cover, bar, end */
+#cover{position:fixed;inset:0;z-index:10;display:grid;place-items:center;text-align:center;background:#000;transition:opacity .8s,visibility .8s;cursor:pointer;padding:20px}
+#cover.off{opacity:0;visibility:hidden}
+#cover h1{font:400 clamp(44px,9vw,120px)/.9 Bangers,Impact,sans-serif;letter-spacing:3px;color:var(--y);margin:0;text-shadow:4px 4px 0 #6b5a00}
+#cover p{margin:10px 0 0;color:#bdb8a8;font-size:clamp(14px,1.6vw,18px);text-transform:uppercase}
+#cover img{height:min(46vh,520px);width:auto;max-width:80vw;margin:14px auto 0;display:block;border:3px solid #f4f1e8;outline:3px solid #000;box-shadow:0 0 60px rgba(255,232,31,.12)}
+.press{display:inline-block;margin-top:22px;border:2px solid var(--y);color:var(--y);padding:8px 16px;font:400 22px Bangers,sans-serif;letter-spacing:2px;animation:blink 1.6s infinite}
+@keyframes blink{50%{opacity:.35}}
+.bar{position:fixed;left:0;right:0;bottom:0;height:58px;display:flex;align-items:center;gap:12px;padding:0 14px;border-top:1px solid #222;background:#000;z-index:8}
+.bar a,.bar button{color:var(--ink);font:700 14px 'Comic Neue',sans-serif;text-transform:uppercase;text-decoration:none;background:none;border:2px solid #333;height:44px;padding:0 14px;display:inline-flex;align-items:center;cursor:pointer;white-space:nowrap}
+.bar a:hover,.bar button:hover{border-color:var(--y);color:var(--y)}
+.bar a:focus-visible,.bar button:focus-visible,.endb a:focus-visible{outline:2px solid var(--y);outline-offset:2px}
+#where{flex:1;text-align:center;font:400 18px Bangers,sans-serif;letter-spacing:1.5px;color:var(--y);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#next{border-color:var(--y)!important;color:var(--y)!important}
+kbd{font:inherit;border:1px solid currentColor;padding:1px 5px;margin-left:8px;font-size:11px}
+.endb{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;align-items:center;padding:16px}
+.endb a{font:400 22px/1 Bangers,sans-serif;letter-spacing:1.5px;text-decoration:none;color:#000;background:var(--y);border:3px solid #000;box-shadow:5px 5px 0 #333;padding:12px 18px 10px;min-height:44px}
+.endb a.ghost{background:#f4f1e8}
+.endb small{flex-basis:100%;text-align:center;color:#8f8a7c;font-size:13px}
+@media(max-width:720px){
+ .page{display:block;overflow-y:auto;padding:10px}
+ .panel{height:54vh;margin-bottom:10px}
+ .p7 .b{height:auto}
+ .bal{max-width:62%;padding:12px 14px}
+ .cap{max-width:80%}
+ .bar a span,kbd{display:none}
+ #where{font-size:15px}
+}
+@media(prefers-reduced-motion:reduce){.panel{transition:opacity .3s;filter:none;transform:none}.kb,.flame,.dust{animation:none!important}}
+</style>
+</head>
+<body>
+
+<!-- shared art -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+ <linearGradient id="g-metal" x1="0" x2="1"><stop offset="0" stop-color="#fbfcfd"/><stop offset=".5" stop-color="#b9bfc8"/><stop offset="1" stop-color="#6b717b"/></linearGradient>
+ <linearGradient id="g-white" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#bfc5ce"/></linearGradient>
+ <linearGradient id="g-foil" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6d77e"/><stop offset=".45" stop-color="#a8721e"/><stop offset=".7" stop-color="#ebc15c"/><stop offset="1" stop-color="#7d5112"/></linearGradient>
+ <linearGradient id="g-cell" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4466b4"/><stop offset=".6" stop-color="#1a2a58"/><stop offset="1" stop-color="#0f1734"/></linearGradient>
+ <radialGradient id="g-pad" cx="40%" cy="35%"><stop offset="0" stop-color="#f1f3f5"/><stop offset="1" stop-color="#7f858e"/></radialGradient>
+ <linearGradient id="g-visor" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff2b0"/><stop offset=".35" stop-color="#e2b04a"/><stop offset="1" stop-color="#6e4610"/></linearGradient>
+ <linearGradient id="g-suit" x1="0" x2="1"><stop offset="0" stop-color="#fff"/><stop offset=".7" stop-color="#e3e1dc"/><stop offset="1" stop-color="#a9a6a0"/></linearGradient>
+ <linearGradient id="g-ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9a968f"/><stop offset=".5" stop-color="#5e5b56"/><stop offset="1" stop-color="#262523"/></linearGradient>
+ <linearGradient id="g-gnight" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4b4945"/><stop offset="1" stop-color="#121211"/></linearGradient>
+ <radialGradient id="g-glow"><stop offset="0" stop-color="#fff"/><stop offset=".3" stop-color="#ffd27a"/><stop offset=".7" stop-color="#ff7a1a" stop-opacity=".5"/><stop offset="1" stop-color="#ff7a1a" stop-opacity="0"/></radialGradient>
+ <radialGradient id="g-earth" cx="62%" cy="38%"><stop offset="0" stop-color="#7fc4ff"/><stop offset=".6" stop-color="#1f5fb8"/><stop offset="1" stop-color="#0b2552"/></radialGradient>
+ <radialGradient id="g-lamp" cx="50%" cy="0%" r="100%"><stop offset="0" stop-color="#fff6d6" stop-opacity=".9"/><stop offset="1" stop-color="#fff6d6" stop-opacity="0"/></radialGradient>
+ <pattern id="ht" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.1" fill="#000" opacity=".35"/></pattern>
+ <pattern id="stars" width="320" height="320" patternUnits="userSpaceOnUse"></pattern>
+
+ <symbol id="sv" viewBox="0 0 220 200">
+  <path d="M112 108 L120 160" stroke="#000" stroke-width="7" stroke-linecap="round"/><path d="M112 108 L120 160" stroke="#9aa1ab" stroke-width="4" stroke-linecap="round"/>
+  <ellipse cx="121" cy="163" rx="10" ry="3.8" fill="url(#g-pad)" stroke="#000" stroke-width="1.5"/>
+  <g stroke-linecap="round" fill="none">
+   <path d="M70 124 L26 178 M150 124 L196 178" stroke="#000" stroke-width="8"/>
+   <path d="M70 124 L26 178" stroke="#d7dbe1" stroke-width="4.5"/><path d="M150 124 L196 178" stroke="#c3c8cf" stroke-width="4.5"/>
+   <path d="M70 124 L52 146 M150 124 L168 146" stroke="#000" stroke-width="11"/>
+   <path d="M70 124 L52 146" stroke="#eef0f3" stroke-width="8"/><path d="M150 124 L168 146" stroke="#d6d9de" stroke-width="8"/>
+   <path d="M88 128 L44 162 M132 128 L176 162" stroke="#000" stroke-width="5.5"/>
+   <path d="M88 128 L44 162 M132 128 L176 162" stroke="#9aa1ab" stroke-width="3"/>
+  </g>
+  <ellipse cx="24" cy="183" rx="14" ry="5.2" fill="url(#g-pad)" stroke="#000" stroke-width="1.8"/>
+  <ellipse cx="198" cy="183" rx="14" ry="5.2" fill="url(#g-pad)" stroke="#000" stroke-width="1.8"/>
+  <path d="M76 131 L146 131 L112 117Z" fill="#2e3238"/>
+  <path d="M86 130 h9 l2 9 h-13z M128 130 h9 l2 9 h-13z M108 121 h8 l2 8 h-12z" fill="#15171a" stroke="#000"/>
+  <path d="M70 124 L150 124 L112 108 Z M70 124 L112 116 L150 124" fill="none" stroke="#000" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M70 124 L150 124 L112 108 Z M70 124 L112 116 L150 124" fill="none" stroke="#e8ebef" stroke-width="2.6" stroke-linejoin="round"/>
+  <path d="M95 111 L129 111 L131 125 L93 125Z" fill="url(#g-foil)" stroke="#000" stroke-width="1.5"/>
+  <g stroke="#000" stroke-width="1.6" stroke-linejoin="round">
+   <path d="M58 96 L68 88 L102 88 L92 96Z" fill="#fff"/><rect x="58" y="96" width="34" height="24" fill="url(#g-white)"/><path d="M92 96 L102 88 L102 112 L92 120Z" fill="#99a0aa"/>
+   <path d="M124 100 L132 93 L162 93 L154 100Z" fill="#fff"/><rect x="124" y="100" width="30" height="20" fill="url(#g-white)"/><path d="M154 100 L162 93 L162 113 L154 120Z" fill="#99a0aa"/>
+  </g>
+  <path d="M62 102 H88 M62 107 H88 M62 112 H88 M128 106 H150 M128 111 H150" stroke="#8d939c" stroke-width=".9"/>
+  <path d="M152 114 L184 129 M154 119 L186 135" stroke="#000" stroke-width="3.4"/><path d="M152 114 L184 129 M154 119 L186 135 M160 117 L166 126 M170 122 L176 131" stroke="#c3c8cf" stroke-width="1.6"/>
+  <path d="M182 130 l15 10 -4 8 -15 -8z" fill="url(#g-metal)" stroke="#000" stroke-width="1.6"/>
+  <path d="M104 110 L112 72 L120 110" stroke="#000" stroke-width="3" fill="none"/><path d="M104 110 L112 72 L120 110" stroke="#c3c8cf" stroke-width="1.4" fill="none"/>
+  <path d="M112 110 V30" stroke="#000" stroke-width="6"/><path d="M112 110 V30" stroke="#e3e6ea" stroke-width="3"/>
+  <g stroke="#000" stroke-width="1.6" stroke-linejoin="round">
+   <rect x="78" y="66" width="13" height="28" rx="3" fill="url(#g-metal)"/>
+   <path d="M75 66 L95 57 L95 68 L75 70Z" fill="#d8dce2"/>
+   <path d="M110 36 L56 22 L50 54 L108 64Z" fill="#e7e4d8"/>
+   <path d="M114 34 L172 16 L180 48 L118 62Z" fill="url(#g-cell)"/>
+  </g>
+  <ellipse cx="84.5" cy="68" rx="5" ry="2" fill="#000"/>
+  <path d="M96 33 L93 61 M82 29 L78 58 M68 26 L63 56 M54 38 L109 50" stroke="#a39e8c" stroke-width=".9"/>
+  <path d="M128 30 L134 58 M143 25 L149 55 M158 21 L164 51 M116 48 L176 32" stroke="#8ea4d6" stroke-width=".8"/>
+  <path d="M114 34 L172 16 L175 30 L116 47Z" fill="#fff" opacity=".12"/>
+ </symbol>
+
+ <symbol id="astro" viewBox="0 0 90 150">
+  <g stroke-linecap="round" fill="none">
+   <path d="M38 76 Q32 100 22 120" stroke="#000" stroke-width="15"/><path d="M38 76 Q32 100 22 120" stroke="#cfccc6" stroke-width="11"/>
+   <path d="M37 42 Q28 58 33 72" stroke="#000" stroke-width="13"/><path d="M37 42 Q28 58 33 72" stroke="#d8d5cf" stroke-width="9"/>
+  </g>
+  <rect x="12" y="28" width="24" height="44" rx="4" fill="url(#g-white)" stroke="#000" stroke-width="2"/>
+  <path d="M15 36 H33 M15 44 H33" stroke="#8d8a84" stroke-width="1"/>
+  <path d="M30 32 Q48 24 58 34 L61 76 Q46 82 32 78 Z" fill="url(#g-suit)" stroke="#000" stroke-width="2.2"/>
+  <path d="M36 50 Q44 54 54 50 M38 64 Q46 68 56 64" stroke="#8d8a84" stroke-width="1.1" fill="none"/>
+  <rect x="45" y="44" width="13" height="10" rx="1.5" fill="#d5d3cd" stroke="#000" stroke-width="1.6"/>
+  <circle cx="49" cy="49" r="1.4" fill="#c33"/><circle cx="54" cy="49" r="1.4" fill="#333"/>
+  <g stroke-linecap="round" fill="none">
+   <path d="M50 76 Q58 98 66 120" stroke="#000" stroke-width="15"/><path d="M50 76 Q58 98 66 120" stroke="url(#g-suit)" stroke-width="11"/>
+   <path d="M56 40 Q70 52 67 68" stroke="#000" stroke-width="13"/><path d="M56 40 Q70 52 67 68" stroke="#f3f2ee" stroke-width="9"/>
+  </g>
+  <ellipse cx="68" cy="72" rx="6" ry="5" fill="#e9e7e1" stroke="#000" stroke-width="1.8"/>
+  <path d="M12 124 Q20 116 30 120 L30 127 L12 127Z M58 124 Q68 116 78 122 L78 128 L58 128Z" fill="#6f6c66" stroke="#000" stroke-width="2"/>
+  <circle cx="52" cy="22" r="16" fill="#f4f3ef" stroke="#000" stroke-width="2.2"/>
+  <path d="M46 12 Q66 8 68 24 Q66 36 50 34 Q44 24 46 12Z" fill="url(#g-visor)" stroke="#000" stroke-width="1.8"/>
+  <path d="M54 14 Q62 13 64 20" stroke="#fff" stroke-width="2.2" fill="none" opacity=".8"/>
+ </symbol>
+
+ <symbol id="lm" viewBox="0 0 220 200">
+  <g stroke-linecap="round" fill="none">
+   <path d="M60 140 L28 184 M160 140 L192 184 M80 146 L66 176 M140 146 L154 176" stroke="#000" stroke-width="7"/>
+   <path d="M60 140 L28 184 M160 140 L192 184" stroke="#cfd2d6" stroke-width="4"/><path d="M80 146 L66 176 M140 146 L154 176" stroke="#8d939c" stroke-width="3.4"/>
+   <path d="M44 120 L28 184 M176 120 L192 184" stroke="#000" stroke-width="5"/><path d="M44 120 L28 184 M176 120 L192 184" stroke="#e6e8eb" stroke-width="2.6"/>
+  </g>
+  <g stroke="#000" stroke-width="1.8"><ellipse cx="28" cy="186" rx="13" ry="4.5" fill="url(#g-pad)"/><ellipse cx="192" cy="186" rx="13" ry="4.5" fill="url(#g-pad)"/><ellipse cx="66" cy="178" rx="9" ry="3" fill="url(#g-pad)"/><ellipse cx="154" cy="178" rx="9" ry="3" fill="url(#g-pad)"/></g>
+  <path d="M50 100 L170 100 L182 112 L182 140 L170 150 L50 150 L38 140 L38 112 Z" fill="url(#g-foil)" stroke="#000" stroke-width="2.4"/>
+  <path d="M50 100 V150 M170 100 V150 M38 125 H182" stroke="#5a3b0c" stroke-width="1.2" opacity=".7"/>
+  <path d="M70 100 L70 68 L88 48 L136 48 L154 66 L154 100 Z" fill="#c9cbcf" stroke="#000" stroke-width="2.4"/>
+  <path d="M70 68 L88 48 L112 48 L112 100 L70 100Z" fill="#e4e5e8" stroke="#000" stroke-width="1.6"/>
+  <path d="M78 66 L92 54 L100 54 L100 70 Z M102 54 L108 54 L108 70 L102 70Z" fill="#141518" stroke="#000"/>
+  <rect x="84" y="78" width="18" height="18" fill="#b9bcc2" stroke="#000" stroke-width="1.6"/>
+  <path d="M136 48 V30 M136 30 L148 22" stroke="#000" stroke-width="3"/><circle cx="150" cy="20" r="7" fill="#f2f2f2" stroke="#000" stroke-width="1.6"/>
+  <rect x="58" y="62" width="10" height="10" fill="#9ea2a8" stroke="#000" stroke-width="1.4"/><rect x="156" y="62" width="10" height="10" fill="#9ea2a8" stroke="#000" stroke-width="1.4"/>
+  <path d="M93 150 L90 166 M97 150 L94 166 M90 156 H96 M90 162 H95" stroke="#000" stroke-width="1.6"/>
+ </symbol>
+
+ <symbol id="earth" viewBox="0 0 100 100">
+  <circle cx="50" cy="50" r="47" fill="url(#g-earth)" stroke="#000" stroke-width="2"/>
+  <path d="M30 30 Q46 22 60 32 T80 38 M24 52 Q40 46 52 56 T76 62 M36 72 Q50 66 64 76" stroke="#fff" stroke-width="4" fill="none" opacity=".75" stroke-linecap="round"/>
+  <path d="M50 3 A47 47 0 0 0 50 97 A26 47 0 0 1 50 3Z" fill="#000" opacity=".86"/>
+ </symbol>
+
+ <symbol id="print" viewBox="0 0 40 90">
+  <path d="M8 6 Q20 -2 32 6 L34 40 Q36 50 33 60 L32 84 Q20 92 8 84 L7 60 Q4 50 6 40Z" fill="#2c2b28" stroke="#111" stroke-width="1.5"/>
+  <path d="M10 12 H30 M9 20 H31 M8 28 H32 M8 36 H32 M9 64 H31 M9 72 H31 M10 80 H30" stroke="#6b6863" stroke-width="3"/>
+ </symbol>
+</defs>
+</svg>
+
+<div id="cover" role="button" tabindex="0" aria-label="Begin the comic">
+ <div>
+  <p>A Surveyor 3 story</p>
+  <h1>The One<br>Who Waited</h1>
+  <img src="img/cover.jpg" alt="Surveyor 3 on the Moon with Earth in the sky">
+  <span class="press">Press SPACE to begin</span>
+ </div>
+</div>
+
+<!-- CHAPTER 1 -->
+<section class="page p1" data-t="Chapter 1 · The Stranger · 1969">
+ <div class="panel a">
+  <img class="art kbi" src="img/1a.jpg" alt="A single astronaut boot print in grey lunar dust">
+  <p class="cap chap" style="left:10px;top:10px">Chapter 1 — The Stranger</p>
+  <p class="cap" style="left:10px;bottom:10px">November 1969. The Moon. Something is waiting.</p>
+ </div>
+ <div class="panel b">
+  <img class="art kbi" src="img/1b.jpg" alt="Two astronauts walk across the Moon toward a distant machine">
+ </div>
+ <div class="panel c hit" id="stranger" data-int>
+  <img class="art kb" src="img/1c.jpg" alt="A dark silhouette of a strange machine on the lunar horizon" style="object-position:62% 60%">
+  <p class="bal" style="right:6%;top:10%;--tx:20%;--tr:40deg;max-width:30%">…?</p>
+  <span class="hintp">Click the machine — or press SPACE</span>
+ </div>
+</section>
+
+<!-- CHAPTER 2 -->
+<section class="page p2" data-t="Chapter 2 · The Fall · 20 April 1967">
+ <div class="panel a">
+  <img class="art kbi" src="img/2a.jpg" alt="Surveyor 3 descends on engine plumes toward the lunar surface">
+  <p class="cap chap" style="left:10px;top:10px">Chapter 2 — The Fall</p>
+  <p class="cap" style="left:10px;top:52px;max-width:34%">20 April 1967. Two and a half years earlier.</p>
+  <p class="bal" style="left:6%;top:42%;--tx:88%;--tr:-55deg;max-width:26%">The ground was closer than I expected!</p>
+ </div>
+ <div class="panel b" id="bounce" data-int>
+  <svg class="art fit" viewBox="0 0 600 338" preserveAspectRatio="xMidYMax slice">
+   <image href="img/2b.jpg" width="600" height="338" preserveAspectRatio="xMidYMid slice"/>
+   <path id="arcs" d="" fill="none" stroke="#ffe81f" stroke-width="2.5" stroke-dasharray="4 7"/>
+   <g id="puffs"></g>
+   <use id="bl" href="#sv" x="0" y="0" width="130" height="118"/>
+   <g id="bsfx"></g>
+   <rect class="hit" width="600" height="338" fill="transparent"/>
+  </svg>
+  <span class="hintp" id="bhint">Tap the panel — 3 touches</span>
+ </div>
+ <div class="panel c">
+  <img class="art kbi" src="img/2c.jpg" alt="Surveyor 3 at rest in a crater as dust settles">
+  <p class="cap" style="left:10px;top:10px">Shiny rocks fooled its radar. The engine didn't cut off — Surveyor bounced twice before it stopped.</p>
+ </div>
+</section>
+
+<!-- CHAPTER 3 -->
+<section class="page p3" data-t="Chapter 3 · The First Touch · 1967">
+ <div class="panel a">
+  <img class="art kbi" src="img/3a.jpg" alt="Close-up of Surveyor's TV camera, its mirror reflecting the lunar surface">
+  <p class="cap chap" style="left:10px;top:10px">Chapter 3 — The First Touch</p>
+  <p class="cap" style="right:10px;bottom:10px;max-width:56%">Its TV camera looked around. 6,326 pictures went home to Earth.</p>
+ </div>
+ <div class="panel b">
+  <img class="art kbi" src="img/3b.jpg" alt="Surveyor's mechanical scoop bites into lunar soil">
+  <p class="bal" style="right:4%;top:5%;--tx:20%;--tr:30deg;max-width:52%">Before humans could walk here, we had to know what was beneath them.</p>
+ </div>
+ <div class="panel c" id="dig" data-int>
+  <svg class="art fit" id="digsvg" viewBox="0 0 800 343" preserveAspectRatio="xMidYMid slice">
+   <image href="img/3c.jpg" width="800" height="343" preserveAspectRatio="xMidYMid slice"/>
+   <rect x="120" y="150" width="520" height="46" fill="none" stroke="#ffe81f" stroke-width="2.5" stroke-dasharray="10 8"/>
+   <defs><clipPath id="trenchclip"><rect id="tclip" x="120" y="130" width="0" height="90"/></clipPath></defs>
+   <g clip-path="url(#trenchclip)">
+    <rect x="124" y="158" width="512" height="30" rx="14" fill="#1a1918" stroke="#000" stroke-width="2"/>
+    <path d="M130 158 H630" stroke="#d8d3ca" stroke-width="3" opacity=".7"/>
+    <path d="M128 192 Q380 202 632 192" stroke="#9a958c" stroke-width="5" fill="none"/>
+   </g>
+   <g id="scoop" tabindex="0" role="slider" aria-label="Scoop position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" transform="translate(120 0)">
+    <path d="M-220 40 L0 150" stroke="#000" stroke-width="12"/><path d="M-220 40 L0 150" stroke="#d6c08a" stroke-width="6"/>
+    <path d="M-14 142 L26 156 L22 190 L-18 178 Z" fill="url(#g-metal)" stroke="#000" stroke-width="3"/>
+    <circle cx="4" cy="166" r="36" fill="transparent"/>
+   </g>
+  </svg>
+  <div class="sci" id="sci"><b>Science file</b>The soil behaved like wet sand — firm enough to hold an Apollo lunar module. The scoop dug 4 trenches and made 4 bearing tests and 13 impact tests.</div>
+  <span class="hintp" id="dhint">Drag the scoop along the strip</span>
+ </div>
+</section>
+
+<!-- CHAPTER 4 -->
+<section class="page p4" data-t="Chapter 4 · Silence · 4 May 1967">
+ <div class="panel a" data-fx="noise">
+  <div class="tv" id="tv"><canvas id="tvc" width="320" height="200"></canvas><span>Signal lost</span></div>
+  <p class="cap chap" style="left:10px;top:10px">Chapter 4 — Silence</p>
+  <p class="cap" style="right:10px;bottom:10px">The last picture.</p>
+ </div>
+ <div class="panel b">
+  <img class="art" src="img/4b.jpg" alt="Surveyor 3 at lunar sunset casting long shadows">
+  <div class="art night" style="background:#03040a;opacity:0"></div>
+  <p class="cap" style="right:10px;top:10px;max-width:50%">The lunar night began. Two days later, on 4 May 1967, Surveyor 3 went silent.</p>
+  <p class="bal up" style="right:4%;bottom:5%;--tx:30%;--tr:20deg;max-width:56%">My work was finished. But the Moon had more visitors to meet.</p>
+ </div>
+ <div class="panel c" data-fx="cal">
+  <img class="art kbi" src="img/4c.jpg" alt="Surveyor 3 standing dark and still in the lunar night">
+  <div class="cal"><i></i><b id="calm">MAY</b><em id="caly">1967</em></div>
+  <p class="cap" style="left:10px;top:10px">Days became months. Months became years.</p>
+ </div>
+</section>
+
+<!-- CHAPTER 5 -->
+<section class="page p5" data-t="Chapter 5 · They Came Back · November 1969">
+ <div class="panel a" id="pano" data-int data-fx="pan">
+  <div class="pan" id="panin"><img src="img/5a.jpg" alt="Panorama: the Apollo 12 lander, a trail of boot prints, two astronauts and Surveyor 3 in its crater"></div>
+  <p class="cap chap" style="left:10px;top:10px">Chapter 5 — They Came Back</p>
+  <p class="cap" style="left:10px;top:52px;max-width:48%">18 November 1969. Apollo 12 landed about 180 meters away.</p>
+  <span class="hintp" id="phint">Move across the panel to look around</span>
+ </div>
+ <div class="panel b">
+  <img class="art kbi" src="img/5b.jpg" alt="Two astronauts stand beside Surveyor 3 in its crater">
+  <p class="cap" style="left:10px;bottom:10px;max-width:46%">Next day, on their second moonwalk, Pete Conrad and Alan Bean reached the old robot.</p>
+  <p class="bal" style="right:4%;top:6%;--tx:12%;--tr:50deg;max-width:22%">…Visitors.</p>
+ </div>
+</section>
+
+<!-- CHAPTER 6 -->
+<section class="page p6" data-t="Chapter 6 · A Piece of Home">
+ <div class="panel a">
+  <img class="art kbi" src="img/6a.jpg" alt="An astronaut's gloved hands cut Surveyor's TV camera free">
+  <p class="cap chap" style="left:10px;top:10px">Chapter 6 — A Piece of Home</p>
+  <p class="cap" style="right:10px;bottom:10px;max-width:58%">The astronauts cut off its TV camera and other parts, including the soil scoop.</p>
+ </div>
+ <div class="panel b" id="lift" data-int>
+  <img class="art flyer hit" id="cam" src="img/6b.jpg" alt="Surveyor's TV camera floating against black space">
+  <span class="hintp" id="lhint">Click the camera</span>
+ </div>
+ <div class="panel c">
+  <img class="art kbi" src="img/6c.jpg" alt="Two scientists examine the Surveyor camera under a lab lamp">
+  <p class="cap" style="left:10px;top:10px;max-width:40%">Back on Earth, scientists studied what two and a half years on the Moon had done to the parts.</p>
+  <p class="bal" style="left:36%;top:6%;--tx:70%;--tr:-12deg;max-width:24%">I could not return. But a part of me could.</p>
+ </div>
+</section>
+
+<!-- CHAPTER 7 -->
+<section class="page p7" data-t="Chapter 7 · The One Who Waited">
+ <div class="panel a">
+  <img class="art kbi" src="img/7a.jpg" alt="Surveyor 3 alone under a starry sky with Earth above and boot prints around it">
+  <h2 class="endt">The One Who Waited</h2>
+  <p class="cap" style="left:50%;bottom:16px;transform:translateX(-50%);max-width:min(560px,90%);text-align:center;font-size:clamp(13px,1.3vw,18px)">Some explorers make history by moving forward. Others make history by waiting.</p>
+ </div>
+ <div class="panel b">
+  <div class="endb">
+   <a href="https://science.nasa.gov/mission/surveyor-3/" target="_blank" rel="noopener">Explore the real mission ↗</a>
+   <a class="ghost" href="index.html#moon">← Back to the Moon</a>
+   <small>Real photos of the Apollo 12 visit are on NASA's Surveyor 3 mission page.</small>
+  </div>
+ </div>
+</section>
+
+<nav class="bar">
+ <a href="index.html#moon">←<span>&nbsp;Back to the Moon</span></a>
+ <div id="where">The One Who Waited</div>
+ <button id="prev" aria-label="Previous panel">◂</button>
+ <button id="next">Next<kbd>SPACE</kbd></button>
+</nav>
+<div class="flash" id="flash"></div>
+
+<script>
+{
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const NS='http://www.w3.org/2000/svg';
+const mk=(tag,at)=>{const e=document.createElementNS(NS,tag);for(const k in at)e.setAttribute(k,at[k]);return e};
+
+/* stars */
+{const p=$('#stars');let s=7;const r=()=>(s=(s*16807)%2147483647)/2147483647;
+ for(let i=0;i<70;i++){const c=mk('circle',{cx:r()*320,cy:r()*320,r:(r()<.1?1.4:.6+r()*.5),fill:'#fff',opacity:(.35+r()*.6).toFixed(2)});p.appendChild(c)}}
+/* footprint trails */
+function trail(g,pts,size,delay0){pts.forEach(([x,y,a],i)=>{const u=mk('use',{href:'#print',x:-size/2,y:-size,width:size,height:size*2.2,transform:`translate(${x} ${y}) rotate(${a}) scale(1 .35)`,class:'fp'});u.style.animationDelay=(delay0+i*.18)+'s';g.appendChild(u)})}
+
+/* navigation */
+const pages=$$('.page'),cover=$('#cover'),where=$('#where'),flash=$('#flash');
+let p=-1,c=0;const started=new Set();
+const panels=i=>[...pages[i].querySelectorAll('.panel')];
+function showPage(i){pages.forEach((pg,j)=>pg.classList.toggle('cur',j===i));p=i;where.textContent=pages[i].dataset.t}
+function reveal(el){el.classList.add('on');if(innerWidth<=720)el.scrollIntoView({behavior:'smooth',block:'center'});const fx=el.dataset.fx;if(fx&&!started.has(el)){started.add(el);FX[fx]&&FX[fx](el)}}
+function next(){
+ if(p<0){cover.classList.add('off');showPage(0);c=0}
+ const ps=panels(p);
+ if(c<ps.length){reveal(ps[c]);c++;return}
+ if(p<pages.length-1){showPage(p+1);c=0;next()}
+}
+function prev(){
+ if(p<0)return;
+ const ps=panels(p);
+ if(c>1){c--;ps[c].classList.remove('on');return}
+ if(p>0){showPage(p-1);c=panels(p).length}
+ else{ps[0].classList.remove('on');c=0;pages[0].classList.remove('cur');cover.classList.remove('off');p=-1;where.textContent='The One Who Waited'}
+}
+function jump(i){flash.classList.add('on');setTimeout(()=>{flash.classList.remove('on');panels(p).forEach(e=>e.classList.add('on'));showPage(i);c=0;next()},200)}
+addEventListener('keydown',e=>{
+ if(e.target.closest&&e.target.closest('#scoop')&&(e.key==='ArrowLeft'||e.key==='ArrowRight'))return;
+ if(e.code==='Space'||e.key==='ArrowRight'||e.key==='Enter'){e.preventDefault();next()}
+ else if(e.key==='ArrowLeft'||e.key==='Backspace'){e.preventDefault();prev()}
+});
+$('#next').addEventListener('click',next);$('#prev').addEventListener('click',prev);
+cover.addEventListener('click',next);
+$$('.page').forEach(pg=>pg.addEventListener('click',e=>{if(e.target.closest('[data-int],a,button'))return;next()}));
+
+/* S1: click the stranger -> 1967 */
+$('#stranger').addEventListener('click',e=>{e.stopPropagation();if(p===0)jump(1)});
+const fitAll=()=>document.querySelectorAll('svg.fit').forEach(v=>v.setAttribute('preserveAspectRatio',innerWidth<=720?'xMidYMid meet':(v.id==='digsvg'?'xMidYMid slice':'xMidYMax slice')));fitAll();addEventListener('resize',fitAll);
+
+/* S2: bounce */
+{const L=$('#bl'),sf=$('#bsfx'),pf=$('#puffs'),arcs=$('#arcs'),G=272;
+ const spots=[[130,150],[130,G],[300,G],[470,G]];let step=0,d='';
+ const put=(x,y)=>{L.setAttribute('x',x-65);L.setAttribute('y',y-113)};put(...spots[0]);
+ const words=['TOK!','TOK!','THUD!'];
+ function hop(a,b,peak,done){const t0=performance.now(),D=700;(function f(now){const t=Math.min((now-t0)/D,1),x=a[0]+(b[0]-a[0])*t,y=a[1]+(b[1]-a[1])*t-peak*4*t*(1-t);put(x,y);if(t<1)requestAnimationFrame(f);else done()})(t0)}
+ function land(i){const [x]=spots[i+1];
+  const pu=mk('ellipse',{cx:x,cy:G+4,rx:50,ry:14,fill:'#b9b4aa',class:'dust'});pu.style.animation='dust 2.5s ease-out both';pf.appendChild(pu);
+  const t=mk('text',{x:x,y:G+(i===2?58:46),'text-anchor':'middle','font-size':i===2?60:38,fill:i===2?'#ffe81f':'#fff','stroke-width':5,class:'sfx'});t.textContent=words[i];sf.appendChild(t)}
+ $('#bounce').addEventListener('click',e=>{e.stopPropagation();if(step>=3)return;$('#bhint').classList.add('gone');
+  const a=spots[step],b=spots[step+1],pk=step===0?0:(step===1?120:60);
+  if(step>0){d+=`M${a[0]} ${a[1]-6} Q${(a[0]+b[0])/2} ${a[1]-pk*2} ${b[0]} ${b[1]-6}`;arcs.setAttribute('d',d)}
+  const i=step;step++;hop(a,b,pk,()=>land(i))});
+}
+
+/* S3: dig */
+{const sv=$('#digsvg'),sc=$('#scoop'),cl=$('#tclip'),X0=120,X1=640;let x=X0,drag=false,done=false;
+ const set=v=>{x=Math.max(X0,Math.min(X1,v));sc.setAttribute('transform',`translate(${x} 0)`);cl.setAttribute('width',x-X0);
+  const pct=Math.round((x-X0)/(X1-X0)*100);sc.setAttribute('aria-valuenow',pct);
+  if(pct>4)$('#dhint').classList.add('gone');if(pct>=98&&!done){done=true;$('#sci').classList.add('on')}};
+ const toSvg=e=>{const pt=sv.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;return pt.matrixTransform(sv.getScreenCTM().inverse()).x};
+ sc.addEventListener('pointerdown',e=>{drag=true;sc.setPointerCapture(e.pointerId);e.stopPropagation()});
+ sc.addEventListener('pointermove',e=>{if(drag)set(toSvg(e))});
+ sc.addEventListener('pointerup',()=>drag=false);
+ sc.addEventListener('keydown',e=>{if(e.key==='ArrowRight'){set(x+26);e.preventDefault()}if(e.key==='ArrowLeft'){set(x-26);e.preventDefault()}});
+ $('#dig').addEventListener('click',e=>e.stopPropagation());
+}
+
+/* S6: lift camera */
+$('#cam').addEventListener('click',e=>{e.stopPropagation();const cm=$('#cam');if(cm.classList.contains('go'))return;
+ $('#lhint').classList.add('gone');cm.classList.add('go');
+ setTimeout(()=>{flash.classList.add('on');setTimeout(()=>{flash.classList.remove('on');const ps=panels(5);if(p===5&&c<3){while(c<3){reveal(ps[c]);c++}}},180)},1100)});
+$('#lift').addEventListener('click',e=>e.stopPropagation());
+
+/* effects started on reveal */
+const FX={
+ noise(el){const cv=$('#tvc'),x=cv.getContext('2d'),W=320,H=200,im=new Image();
+  im.onload=()=>{x.drawImage(im,0,0,W,H);setTimeout(()=>{
+   let n=0;const t=setInterval(()=>{n++;for(let i=0;i<n*22;i++){const v=Math.random()*255|0;x.fillStyle=`rgb(${v},${v},${v})`;x.fillRect((Math.random()*W/3|0)*3,(Math.random()*H/3|0)*3,3,3)}
+    if(n>55){x.globalAlpha=.07;x.fillStyle='#000';x.fillRect(0,0,W,H);x.globalAlpha=1}
+    if(n>95){clearInterval(t);x.fillStyle='#000';x.fillRect(0,0,W,H);$('#tv').classList.add('dead')}},70)},1800)};
+  im.src='img/4a.jpg'},
+ cal(){const M=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];let m=4,y=1967;
+  const t=setInterval(()=>{m++;if(m>11){m=0;y++}$('#calm').textContent=M[m];$('#caly').textContent=y;if(y===1969&&m===10)clearInterval(t)},150)},
+ pan(el){const inn=$('#panin');let f=0,tg=0,user=false;
+  const tick=()=>{f+=(tg-f)*.06;const max=Math.max(inn.offsetWidth-el.clientWidth,0);inn.style.transform=`translateX(${-f*max}px)`;requestAnimationFrame(tick)};tick();
+  el.addEventListener('pointermove',e=>{user=true;$('#phint').classList.add('gone');const r=el.getBoundingClientRect();tg=Math.min(Math.max((e.clientX-r.left)/r.width,0),1)});
+  el.addEventListener('click',e=>e.stopPropagation());
+  setTimeout(()=>{if(!user)tg=1},2500)}
+};
+}
+</script>
+</body>
+</html>

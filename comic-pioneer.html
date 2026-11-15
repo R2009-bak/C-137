@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Last Message</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: brave, then awed, then infinite — a comic about a probe that is still flying.
+   IDEA: a printed comic page; SPACE turns on one panel at a time.
+   PICTURE: painted comic panels on black gutters; dark space, Jupiter amber, bronze, faint sunlight.
+   COLOUR and TYPE: black page, sand captions, white balloons, gold chapter tags; Bangers + Comic Neue.
+   LAYOUT: one chapter per page in 2–3 panels; stacked panels on phones. */
+:root{color-scheme:dark;--k:#000;--cap:#f6e2bf;--y:#ffc25a;--ink:#f6efe4}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:#000;color:var(--ink);font:16px/1.4 'Comic Neue',system-ui,sans-serif;overflow:hidden}
+.page{position:fixed;inset:0 0 58px 0;padding:14px;display:grid;gap:14px;max-width:1440px;margin:0 auto;opacity:0;visibility:hidden;transition:opacity .6s,visibility .6s}
+.page.cur{opacity:1;visibility:visible}
+.panel{position:relative;overflow:hidden;background:#09090b;opacity:0;transform:scale(.97);filter:blur(10px);transition:opacity 1s ease,transform 1s ease,filter 1s ease}
+.panel.on{opacity:1;transform:none;filter:none}
+.a{grid-area:a}.b{grid-area:b}.c{grid-area:c}
+.art{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover}
+.panel.on img.kbi{animation:kbi 16s ease-out both}@keyframes kbi{from{transform:scale(1)}to{transform:scale(1.07)}}
+.panel.on img.kb{animation:kb2 10s ease-out both;transform-origin:62% 60%}@keyframes kb2{from{transform:scale(1)}to{transform:scale(1.3)}}
+.endt{position:absolute;left:4%;right:30%;top:7%;margin:0;text-align:left;font:400 clamp(34px,6vw,84px)/1 Bangers,Impact,sans-serif;letter-spacing:3px;color:var(--y);text-shadow:4px 4px 0 #000,-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000;opacity:0;transition:opacity 1.2s .8s}.panel.on .endt{opacity:1}
+.panel.on .night{animation:night 5s 1s ease-in both}
+.p1{grid-template-columns:1fr 2fr;grid-template-rows:1.25fr 1fr;grid-template-areas:"a b" "c c"}
+.p2{grid-template-columns:2fr 1fr;grid-template-rows:1.1fr 1fr;grid-template-areas:"a a" "b c"}
+.p3,.p4,.p6{grid-template-columns:1fr 1fr;grid-template-rows:1.15fr 1fr;grid-template-areas:"a b" "c c"}
+.p5{grid-template-columns:1fr;grid-template-rows:1.5fr 1fr;grid-template-areas:"a" "b"}
+.p7{grid-template-columns:1fr;grid-template-rows:1fr auto;grid-template-areas:"a" "b"}
+
+/* lettering */
+.bal{position:absolute;z-index:2;background:#fff;color:#000;border:2px solid #000;border-radius:50%;padding:16px 20px;font:700 clamp(12px,1.2vw,16px)/1.15 'Comic Neue',sans-serif;text-transform:uppercase;text-align:center;max-width:46%;opacity:0;transform:scale(.8);transition:opacity .5s .7s,transform .5s .7s}
+.bal::before,.bal::after{content:"";position:absolute;left:var(--tx,45%);width:0;height:0;border-style:solid;transform-origin:top center;transform:rotate(var(--tr,18deg))}
+.bal::before{top:100%;border-width:24px 9px 0;border-color:#000 transparent transparent;margin-top:-1px}
+.bal::after{top:100%;border-width:20px 6px 0;border-color:#fff transparent transparent;margin-top:-3px;margin-left:3px}
+.bal.up::before,.bal.up::after{top:auto;bottom:100%;transform-origin:bottom center;transform:rotate(calc(180deg + var(--tr,18deg)))}
+.bal.up::before{margin:0 0 -1px}.bal.up::after{margin:0 0 -3px 3px}
+.panel.on .bal{opacity:1;transform:none}
+.cap{position:absolute;z-index:2;background:var(--cap);color:#000;border:2px solid #000;padding:6px 10px;font:700 clamp(11px,1.05vw,15px)/1.2 'Comic Neue',sans-serif;text-transform:uppercase;max-width:62%;opacity:0;transition:opacity .5s .35s}
+.cap.chap{background:#000;color:var(--y);border-color:var(--y);font:400 clamp(15px,1.5vw,20px)/1 Bangers,Impact,sans-serif;letter-spacing:1.5px;padding:6px 10px 4px}
+.panel.on .cap{opacity:1}
+.hintp{position:absolute;z-index:3;left:50%;bottom:12px;transform:translateX(-50%);background:rgba(0,0,0,.75);border:2px solid var(--y);color:var(--y);padding:6px 12px;font:700 13px 'Comic Neue',sans-serif;text-transform:uppercase;white-space:nowrap;opacity:0;transition:opacity .4s 1.2s;pointer-events:none}
+.panel.on .hintp{opacity:1}
+.hintp.gone{opacity:0!important;transition-delay:0s}
+svg text.sfx{font-family:Bangers,Impact,sans-serif;paint-order:stroke;stroke:#000;stroke-linejoin:round}
+
+/* animations */
+.panel.on .print{animation:print 1s both}
+@keyframes print{from{opacity:0;transform:scale(1.15)}to{opacity:1;transform:none}}
+.fp{opacity:0}.panel.on .fp{animation:fp .5s both}
+@keyframes fp{to{opacity:1}}
+.panel.on .kb{animation:kb 9s ease-out both}
+@keyframes kb{from{transform:scale(1)}to{transform:scale(1.18)}}
+.kb{transform-origin:50% 72%;transform-box:view-box}
+.flame{animation:fl .12s infinite alternate}
+@keyframes fl{to{opacity:.65;transform:scaleY(.86)}}
+.flame{transform-box:fill-box;transform-origin:50% 0}
+.dust{opacity:0}.panel.on .dust{animation:dust 3.5s ease-out both}
+@keyframes dust{0%{opacity:.9;transform:scale(.6)}100%{opacity:0;transform:scale(1.6)}}
+.dust{transform-box:fill-box;transform-origin:50% 100%}
+.panel.on .night{animation:night 5s 1s ease-in both}
+@keyframes night{from{opacity:0}to{opacity:.88}}
+.panel.on .sunlit{animation:sunset 5s 1s ease-in both}
+@keyframes sunset{to{opacity:0}}
+.stbl{animation:tw 3s ease-in-out infinite alternate}
+@keyframes tw{to{opacity:.4}}
+
+/* interactive bits */
+.hit{cursor:pointer}
+#scoop{cursor:grab;touch-action:none;outline:none}#scoop:active{cursor:grabbing}
+#scoop:focus-visible{outline:none}#scoop:focus-visible circle{stroke:var(--y);stroke-width:4}
+.sci{position:absolute;z-index:3;right:14px;top:14px;width:min(320px,58%);background:var(--cap);color:#000;border:3px solid #000;box-shadow:6px 6px 0 #000;padding:10px 12px;font:700 13px/1.3 'Comic Neue',sans-serif;text-transform:uppercase;opacity:0;transform:translateY(-10px) rotate(1deg);transition:.5s;pointer-events:none}
+.sci b{display:block;font:400 22px/1 Bangers,sans-serif;letter-spacing:1px;margin-bottom:4px}
+.sci.on{opacity:1;transform:rotate(1deg)}
+.tv{position:absolute;inset:0;overflow:hidden;background:#000}
+.tv canvas{width:100%;height:100%;object-fit:cover;display:block}
+.tv span{position:absolute;inset:0;display:grid;place-items:center;font:400 clamp(20px,2.4vw,32px) Bangers,sans-serif;letter-spacing:2px;color:#fff;opacity:0;transition:opacity 1s}
+.tv.dead span{opacity:.85}
+.cal{position:absolute;left:8%;top:50%;transform:translateY(-50%) rotate(-3deg);width:min(200px,34%);aspect-ratio:4/5;background:#f4f1e8;border:3px solid #000;box-shadow:8px 8px 0 #000;color:#000;text-align:center;display:flex;flex-direction:column}
+.cal i{display:block;height:18%;background:#b8332e;border-bottom:3px solid #000}
+.cal b{flex:1;display:grid;place-items:center;font:400 clamp(30px,4.6vw,64px)/1 Bangers,sans-serif}
+.cal em{font:700 clamp(13px,1.3vw,18px) 'Comic Neue';font-style:normal;padding-bottom:10px}
+.pan{position:absolute;top:0;left:0;height:100%;will-change:transform}
+.pan{min-width:100%}.pan img{height:100%;width:auto;min-width:100%;object-fit:cover;display:block;max-width:none}
+.flyer{transition:transform 1.4s cubic-bezier(.6,.05,.4,1),opacity 1.4s}
+.flyer.go{transform:translate(30%,-30%) scale(.25) rotate(20deg);opacity:0}
+.flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:20;transition:opacity .25s}
+.flash.on{opacity:1;transition:none}
+
+/* cover, bar, end */
+#cover{position:fixed;inset:0;z-index:10;display:grid;place-items:center;text-align:center;background:#000;transition:opacity .8s,visibility .8s;cursor:pointer;padding:20px}
+#cover.off{opacity:0;visibility:hidden}
+#cover h1{font:400 clamp(44px,9vw,120px)/.9 Bangers,Impact,sans-serif;letter-spacing:3px;color:var(--y);margin:0;text-shadow:4px 4px 0 #6b5a00}
+#cover p{margin:10px 0 0;color:#bdb8a8;font-size:clamp(14px,1.6vw,18px);text-transform:uppercase}
+#cover img{height:min(46vh,520px);width:auto;max-width:80vw;margin:14px auto 0;display:block;border:3px solid #f4f1e8;outline:3px solid #000;box-shadow:0 0 60px rgba(255,232,31,.12)}
+.press{display:inline-block;margin-top:22px;border:2px solid var(--y);color:var(--y);padding:8px 16px;font:400 22px Bangers,sans-serif;letter-spacing:2px;animation:blink 1.6s infinite}
+@keyframes blink{50%{opacity:.35}}
+.bar{position:fixed;left:0;right:0;bottom:0;height:58px;display:flex;align-items:center;gap:12px;padding:0 14px;border-top:1px solid #222;background:#000;z-index:8}
+.bar a,.bar button{color:var(--ink);font:700 14px 'Comic Neue',sans-serif;text-transform:uppercase;text-decoration:none;background:none;border:2px solid #333;height:44px;padding:0 14px;display:inline-flex;align-items:center;cursor:pointer;white-space:nowrap}
+.bar a:hover,.bar button:hover{border-color:var(--y);color:var(--y)}
+.bar a:focus-visible,.bar button:focus-visible,.endb a:focus-visible{outline:2px solid var(--y);outline-offset:2px}
+#where{flex:1;text-align:center;font:400 18px Bangers,sans-serif;letter-spacing:1.5px;color:var(--y);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#next{border-color:var(--y)!important;color:var(--y)!important}
+kbd{font:inherit;border:1px solid currentColor;padding:1px 5px;margin-left:8px;font-size:11px}
+.endb{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;align-items:center;padding:16px}
+.endb a{font:400 22px/1 Bangers,sans-serif;letter-spacing:1.5px;text-decoration:none;color:#000;background:var(--y);border:3px solid #000;box-shadow:5px 5px 0 #333;padding:12px 18px 10px;min-height:44px}
+.endb a.ghost{background:#f4f1e8}
+.endb small{flex-basis:100%;text-align:center;color:#8f8a7c;font-size:13px}
+@media(max-width:720px){
+ .page{display:block;overflow-y:auto;padding:10px}
+ .panel{height:54vh;margin-bottom:10px}
+ .p7 .b{height:auto}
+ .bal{max-width:62%;padding:12px 14px}
+ .cap{max-width:80%}
+ .bar a span,kbd{display:none}
+ #where{font-size:15px}
+}
+@media(prefers-reduced-motion:reduce){.panel{transition:opacity .3s;filter:none;transform:none}.kb,.flame,.dust{animation:none!important}}
+
+#cover img{height:min(46vh,520px);width:auto;max-width:80vw;margin:14px auto 0;display:block;border:3px solid #eef0ff;outline:3px solid #000;box-shadow:0 0 60px rgba(255,170,80,.25)}
+#cover h1{text-shadow:4px 4px 0 #6b3a10}
+.art{object-fit:cover}
+.panel.on img.kbi{animation:kbi 16s ease-out both}@keyframes kbi{from{transform:scale(1)}to{transform:scale(1.07)}}
+.sci{background:var(--cap)}
+.ctrl{position:absolute;z-index:3;left:50%;bottom:12px;transform:translateX(-50%);width:min(440px,90%);background:rgba(6,9,26,.88);border:2px solid var(--y);padding:8px 14px;display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:center;font:700 13px 'Comic Neue',sans-serif;text-transform:uppercase;color:#dfe6ff}
+.ctrl label{grid-column:1}
+.ctrl input{grid-column:1/-1;width:100%;height:44px;margin:0;background:none;cursor:pointer;-webkit-appearance:none;appearance:none}
+.ctrl input:focus{outline:none}.ctrl input:focus-visible{outline:2px solid #ffc25a;outline-offset:2px}
+.ctrl input::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:linear-gradient(90deg,#4a3c2c 0 46%,#ffc25a 0,#4a3c2c 54%)}
+.ctrl input::-moz-range-track{height:8px;border-radius:4px;background:linear-gradient(90deg,#4a3c2c 0 46%,#ffc25a 0,#4a3c2c 54%)}
+.ctrl input::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;margin-top:-8px;border-radius:50%;background:#ffc25a;border:2px solid #000}
+.ctrl input::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#ffc25a;border:2px solid #000}
+.ctrl span{color:#ff9b6b;white-space:nowrap;text-align:right}.ctrl span.ok{color:#7dffa8}
+.pring{animation:ringp 1.4s infinite;transform-box:fill-box;transform-origin:center}
+@keyframes ringp{50%{transform:scale(1.35);opacity:.5}}
+.fin{left:50%;bottom:16px;transform:translateX(-50%);max-width:min(560px,90%)!important;text-align:center;font-size:clamp(13px,1.3vw,18px)!important}
+.pp1{grid-template-columns:1.25fr 1fr;grid-template-rows:1fr;grid-template-areas:"a b"}
+.pp2{grid-template-columns:.5fr .5fr 1.8fr;grid-template-rows:1fr;grid-template-areas:"a b c"}
+.pp3{grid-template-columns:1fr 1fr;grid-template-rows:1.1fr 1fr;grid-template-areas:"a a" "b c"}
+.pp3b,.pp7{grid-template-columns:1fr;grid-template-rows:1fr;grid-template-areas:"a"}
+.pp4{grid-template-columns:2fr 1fr;grid-template-rows:1fr;grid-template-areas:"a b"}
+.pp5{grid-template-columns:1.4fr 1fr;grid-template-rows:1fr;grid-template-areas:"a b"}
+.pp6{grid-template-columns:1fr;grid-template-rows:1.3fr 1fr;grid-template-areas:"a" "b"}
+.ppe{grid-template-columns:1.6fr 1fr;grid-template-rows:1fr auto;grid-template-areas:"a b" "c c"}
+.hs rect{fill:transparent;stroke:rgba(255,243,196,.35);stroke-dasharray:6 8;stroke-width:4;cursor:pointer;transition:.2s}
+.hs rect:hover,.hs rect:focus-visible,.hs rect.sel{fill:rgba(255,194,90,.18);stroke:#fff3c4;outline:none}
+.panel.on .hs rect{animation:hint 2.4s 1.5s 2}
+@keyframes hint{50%{stroke:#fff3c4;fill:rgba(255,194,90,.15)}}
+#pinfo{right:14px;top:auto;bottom:14px}
+#trip{touch-action:none;background:#000}#tsv{cursor:ew-resize}
+.fact{position:absolute;z-index:2;right:12px;top:12px;width:min(330px,60%);background:var(--cap);color:#000;border:3px solid #000;box-shadow:5px 5px 0 #000;padding:8px 12px;font:700 13px/1.3 'Comic Neue',sans-serif;text-transform:uppercase}
+.fact b{display:block;font:400 22px/1 Bangers,sans-serif;letter-spacing:1px;margin-bottom:3px}
+.tctrl{left:12px!important;transform:none!important;bottom:12px}
+.panel.on img.kb3{animation:kb3 14s ease-out both;transform-origin:30% 45%}@keyframes kb3{from{transform:scale(1.25)}to{transform:scale(1)}}
+#jx{background:#000}#jsv{cursor:none}
+.ov{opacity:0;transition:opacity .4s}.ov.on{opacity:1}
+#jinfo{right:14px;top:14px;opacity:1;pointer-events:none}
+.sciov,.rgraph{opacity:0;transition:opacity .6s;pointer-events:none}
+.sci-on .sciov,.sci-on .rgraph{opacity:1}
+#rad.sci-on>img{filter:brightness(.55) saturate(.6)}
+#rad>img{transition:filter .6s}
+.rgraph{position:absolute;z-index:2;right:12px;bottom:12px;width:min(300px,50%);background:rgba(8,8,20,.88);border:2px solid #c78bff;padding:8px 10px;color:#dfe6ff;font:700 12px 'Comic Neue',sans-serif;text-transform:uppercase}
+.rgraph svg{display:block;width:100%;height:auto;margin-top:4px}
+.tog{position:absolute;z-index:3;left:12px;bottom:12px;display:flex;border:3px solid #000;box-shadow:4px 4px 0 #000}
+.tog button{min-height:44px;padding:0 18px;border:0;background:var(--cap);color:#000;font:400 22px/1 Bangers,sans-serif;letter-spacing:1px;cursor:pointer}
+.tog button.on{background:var(--y)}
+.qz{position:absolute;inset:0;overflow:auto;padding:18px;background:#120c06 radial-gradient(rgba(255,194,90,.12) 1.1px,transparent 1.5px) 0 0/7px 7px;display:flex;flex-direction:column;gap:10px}
+.qz h3{margin:0;font:400 34px/1 Bangers,sans-serif;letter-spacing:1.5px;color:var(--y)}
+.qh,.qr{margin:0;font:700 14px 'Comic Neue',sans-serif;text-transform:uppercase;color:#e9dcc4}
+.qr{min-height:20px;color:var(--y)}
+.qcols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:10px}
+.qs,.qm{display:flex;flex-direction:column;gap:8px}
+.qz button{min-height:44px;border:2px solid #000;box-shadow:3px 3px 0 #000;background:var(--cap);color:#000;font:700 13px/1.2 'Comic Neue',sans-serif;text-transform:uppercase;cursor:pointer;padding:6px 8px;text-align:left}
+.qs button{display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#f3c66a,#b98a2e)}
+.qs svg{width:70px;height:40px;flex:none}
+.qz button.sel{outline:3px solid #fff;outline-offset:1px}
+.qz button.done{background:#7fe3a0;opacity:.85;cursor:default}
+.qz button.no{background:#ff8a7a}
+.qa{align-self:flex-start;background:#000!important;color:var(--y)!important;border-color:var(--y)!important}
+.qplq{width:100%;max-height:34%;flex:none;border:3px solid #000;box-shadow:4px 4px 0 #000;background:#b8862c}
+.qsym{transition:opacity .4s}.qsym.dim{opacity:.22}.qsym.hot{stroke:#000;filter:drop-shadow(0 0 6px #fff7c0) drop-shadow(0 0 14px #fff2a0)}
+.qm{display:flex;flex-direction:column;gap:8px}
+.qz button.no{animation:shk .4s}@keyframes shk{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.sciwrap{position:absolute;inset:0;z-index:1;background:rgba(4,4,14,.72);opacity:0;transition:opacity .6s;pointer-events:none;display:grid;place-items:center;padding:64px 10px 10px}
+.sci-on .sciwrap{opacity:1}
+.sciwrap svg{width:100%;height:100%;opacity:1!important}
+.tog{left:auto!important;right:12px;bottom:auto!important;top:12px}
+@media(max-width:720px){.tog{top:auto!important;bottom:12px!important}}
+.clock{position:absolute;z-index:2;right:12px;top:12px;background:rgba(6,9,20,.9);border:2px solid #8fd3ff;padding:10px 14px;color:#dfe6ff;font:700 12px 'Comic Neue',sans-serif;text-transform:uppercase;min-width:230px}
+.clock b{display:block;font:400 40px/1 Bangers,sans-serif;letter-spacing:1px;color:#bfe6ff;margin:4px 0}
+.clock em{font-style:normal;color:#ffc25a}
+.replay{position:absolute;z-index:2;left:12px;bottom:12px;min-height:44px;padding:0 16px;font:400 20px/1 Bangers,sans-serif;letter-spacing:1px;border:2px solid var(--y);cursor:pointer;opacity:0;pointer-events:none;transition:.4s}
+.replay.on{opacity:1;pointer-events:auto}
+.panel.on img.drift7{animation:d7 40s linear both;transform-origin:68% 25%}@keyframes d7{from{transform:scale(1)}to{transform:scale(1.18)}}
+.endt7{position:absolute;z-index:2;left:0;right:0;top:40%;margin:0;text-align:center;font:400 clamp(30px,5vw,72px)/1 Bangers,Impact,sans-serif;letter-spacing:3px;color:var(--y);text-shadow:4px 4px 0 #000;opacity:0;transition:opacity 2s 5s}
+.panel.on .endt7{opacity:1}
+.tagx{position:absolute;z-index:2;right:10px;bottom:10px;margin:0;background:#000;color:#fff;border:2px dashed var(--y);padding:6px 10px;font:700 12px 'Comic Neue',sans-serif;text-transform:uppercase}
+@media(max-width:720px){.pp2 .a,.pp2 .b{height:80vh}.qcols{grid-template-columns:1fr}.fact{width:70%}.clock{min-width:0}.clock b{font-size:28px}.rgraph{display:none}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+ <g id="engr" fill="none" stroke="#2a1702" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+  <g id="e-h"><circle cx="470" cy="250" r="20"/><circle cx="560" cy="250" r="20"/><path d="M490 250 H540 M470 238 V262 M560 238 V262 M466 238 l8 -6 M556 262 l8 6"/></g>
+  <g id="e-pul"><path d="M600 440 L1080 440 M600 440 L660 300 M600 440 L540 330 M600 440 L700 360 M600 440 L480 420 M600 440 L520 520 M600 440 L620 560 M600 440 L700 520 M600 440 L760 470 M600 440 L560 300 M600 440 L460 470 M600 440 L650 380 M600 440 L540 470 M600 440 L690 580"/>
+   <path d="M640 350 h8 M700 392 h-8 M520 500 v8 M680 545 h8 M720 470 v8 M520 375 v8" stroke-width="2.4"/></g>
+  <g id="e-sc"><path d="M905 255 Q852 435 905 615"/><path d="M905 255 Q880 435 905 615"/><rect x="878" y="390" width="34" height="88"/><path d="M905 435 H940"/></g>
+  <g id="e-hu"><circle cx="985" cy="300" r="15"/><path d="M985 315 V430 M985 330 L955 360 L948 395 M985 330 L1015 300 L1022 262 M985 430 L970 520 L966 590 M985 430 L1000 520 L1004 590 M958 595 h16 M996 595 h16"/>
+   <circle cx="1075" cy="312" r="14"/><path d="M1063 306 Q1058 330 1064 346 M1087 306 Q1092 330 1086 346 M1075 326 V430 M1075 340 L1053 380 L1052 420 M1075 340 L1097 380 L1098 420 M1075 430 L1064 515 L1062 580 M1075 430 L1086 515 L1088 580 M1054 585 h14 M1082 585 h14"/>
+   <path d="M1130 312 V580 M1122 312 h16 M1122 580 h16" stroke-width="2"/></g>
+  <g id="e-ss"><circle cx="470" cy="660" r="15"/>
+   <circle cx="520" cy="660" r="3"/><circle cx="560" cy="660" r="5"/><circle cx="600" cy="660" r="5"/><circle cx="640" cy="660" r="4"/><circle cx="710" cy="660" r="13"/><circle cx="790" cy="660" r="11"/><circle cx="860" cy="660" r="8"/><circle cx="920" cy="660" r="8"/><circle cx="970" cy="660" r="3"/>
+   <path d="M600 668 Q640 715 700 678 Q780 630 860 600" stroke-width="2.4"/><path d="M846 594 L862 599 L852 612" stroke-width="2.4"/></g>
+ </g>
+</defs></svg>
+
+<div id="cover" role="button" tabindex="0" aria-label="Begin the comic">
+ <div>
+  <p>A Pioneer 10 story</p>
+  <h1>The Last<br>Message</h1>
+  <img src="pimg/cover.jpg" alt="Pioneer 10 passing Jupiter">
+  <span class="press">Press SPACE to begin</span>
+ </div>
+</div>
+
+<!-- P1 -->
+<section class="page pp1" data-t="Chapter 1 · A Message to the Unknown · 1972">
+ <div class="panel a" id="plq" data-int>
+  <svg class="art" viewBox="380 40 830 830" preserveAspectRatio="xMidYMid slice">
+   <image href="pimg/1a.jpg" width="1665" height="944"/>
+   <g transform="rotate(-2.2 790 450) translate(-10 0)" style="mix-blend-mode:multiply"><use href="#engr"/></g>
+   <g transform="rotate(-2.2 790 450) translate(-10 0)" class="hs">
+    <rect data-k="h" x="430" y="215" width="170" height="70"/>
+    <rect data-k="pul" x="450" y="295" width="380" height="295"/>
+    <rect data-k="sc" x="840" y="250" width="90" height="370"/>
+    <rect data-k="hu" x="935" y="270" width="215" height="335"/>
+    <rect data-k="ss" x="440" y="620" width="560" height="80"/>
+   </g>
+  </svg>
+  <p class="cap chap" style="left:10px;top:10px">Chapter 1 — A Message to the Unknown</p>
+  <div class="sci" id="pinfo"></div>
+  <span class="hintp" id="phint">Click the symbols on the plaque</span>
+ </div>
+ <div class="panel b">
+  <img class="art kbi" src="pimg/1b.jpg" alt="Pioneer 10 leaving Earth behind">
+  <p class="cap" style="left:10px;bottom:10px;max-width:46%">2 March 1972. Pioneer 10 leaves Earth, carrying a small gold-anodized plaque.</p>
+  <p class="bal" style="right:4%;top:6%;--tx:24%;--tr:30deg;max-width:30%">They gave me a map of home. Just in case someone finds me.</p>
+ </div>
+</section>
+
+<!-- P2 -->
+<section class="page pp2" data-t="Chapter 2 · Into the Unknown · 1972">
+ <div class="panel a">
+  <img class="art kbi" src="pimg/2a.jpg" alt="Pioneer 10 climbing away from Earth and the Moon">
+  <p class="cap chap" style="left:10px;top:10px">Chapter 2 — Into the Unknown</p>
+  <p class="bal" style="left:6%;bottom:30%;--tx:60%;--tr:-20deg;max-width:84%">No one had traveled this road before.</p>
+ </div>
+ <div class="panel b">
+  <img class="art kbi" src="pimg/2b.jpg" alt="Pioneer 10 crossing a mostly empty asteroid belt">
+  <p class="cap" style="left:10px;bottom:10px;max-width:86%">The real asteroid belt is mostly empty space. Rocks are usually far apart.</p>
+ </div>
+ <div class="panel c" id="trip" data-int>
+  <svg class="art" id="tsv" viewBox="0 0 1450 821" preserveAspectRatio="xMidYMid meet">
+   <image href="pimg/2c.jpg" width="1915" height="821"/>
+   <g fill="none" stroke-width="2">
+    <circle cx="0" cy="320" r="260" stroke="#7fb6ff" opacity=".7"/>
+    <circle cx="0" cy="320" r="395" stroke="#ff8a5c" opacity=".6"/>
+    <circle cx="0" cy="320" r="715" stroke="#c9b48a" stroke-width="290" opacity=".09"/>
+    <circle cx="0" cy="320" r="1350" stroke="#ffb35c" opacity=".6"/>
+   </g>
+   <g font-family="Comic Neue,sans-serif" font-weight="700" font-size="26" fill="#f4e6c8">
+    <text x="190" y="150">EARTH</text><text x="330" y="96">MARS</text><text x="640" y="70">ASTEROID BELT</text><text x="1190" y="80">JUPITER</text></g>
+   <circle cx="230" cy="197" r="10" fill="#7fb6ff"/><circle id="jup" r="26" fill="#d89a5c" stroke="#000" stroke-width="2"/>
+   <path id="path" fill="none" stroke="#ffd76a" stroke-width="3" stroke-dasharray="10 10"/>
+   <path id="done" fill="none" stroke="#ffd76a" stroke-width="5"/>
+   <g id="ship"><circle r="14" fill="#fff" stroke="#000" stroke-width="3"/><circle r="26" fill="none" stroke="#ffd76a" stroke-width="2" class="pring"/></g>
+  </svg>
+  <div class="fact" id="fact"></div>
+  <div class="ctrl tctrl">
+   <label for="tr">Fly Pioneer 10 — scroll or drag</label><span id="dist">1.0 AU</span>
+   <input id="tr" type="range" min="0" max="1000" value="0">
+  </div>
+ </div>
+</section>
+
+<!-- P3 -->
+<section class="page pp3" data-t="Chapter 3 · The Giant · 4 December 1973">
+ <div class="panel a">
+  <img class="art kb3" src="pimg/3a.jpg" alt="Jupiter filling the view, Pioneer 10 tiny in front of it">
+  <p class="cap chap" style="left:10px;top:10px">Chapter 3 — The Giant</p>
+  <p class="cap" style="right:10px;bottom:10px;max-width:46%">4 December 1973. Closest approach: about 130,000 km from Jupiter.</p>
+ </div>
+ <div class="panel b"><img class="art kbi" src="pimg/3b.jpg" alt="Jupiter's cloud bands and Great Red Spot"></div>
+ <div class="panel c">
+  <img class="art kbi" src="pimg/3c.jpg" alt="Pioneer 10 above Jupiter's clouds">
+  <p class="bal" style="left:5%;bottom:5%;--tx:70%;--tr:-30deg;max-width:60%">I had crossed the darkness to meet a giant.</p>
+ </div>
+</section>
+
+<section class="page pp3b" data-t="Chapter 3 · The Giant — explore">
+ <div class="panel a" id="jx" data-int>
+  <svg class="art" id="jsv" viewBox="0 0 1672 941" preserveAspectRatio="xMidYMid meet">
+   <image href="pimg/3d.jpg" width="1672" height="941"/>
+   <g id="ov-mag" class="ov" fill="none" stroke="#8fd3ff" stroke-width="2" stroke-dasharray="6 8">
+    <ellipse cx="836" cy="470" rx="760" ry="430"/><ellipse cx="836" cy="470" rx="660" ry="400"/>
+    <path d="M836 35 C 1500 60 1500 880 836 905 M836 35 C 172 60 172 880 836 905"/></g>
+   <g id="ov-rad" class="ov" fill="none" stroke="#c78bff" stroke-width="14" opacity=".5"><ellipse cx="836" cy="470" rx="560" ry="140"/><ellipse cx="836" cy="470" rx="510" ry="110" stroke-width="8"/></g>
+   <circle id="lens" r="70" fill="none" stroke="#ffd76a" stroke-width="3" opacity="0"/>
+  </svg>
+  <div class="sci on" id="jinfo"><b>Explore Jupiter</b>Move across the planet and around it to see what Pioneer 10 studied.</div>
+ </div>
+</section>
+
+<!-- P4 -->
+<section class="page pp4" data-t="Chapter 4 · The Invisible Danger">
+ <div class="panel a" id="rad" data-int>
+  <img class="art" src="pimg/4a.jpg" alt="Pioneer 10 passing close to Jupiter">
+  <div class="sciwrap"><svg class="sciov" id="sciov" viewBox="-180 0 1180 720" preserveAspectRatio="xMidYMid meet" aria-label="Schematic of Jupiter's magnetic field and radiation belts">
+   <g id="fl" fill="none" stroke="#8fd3ff" stroke-width="2" stroke-dasharray="6 7" opacity=".85"></g>
+   <g id="belts" fill="none" stroke="#c78bff" stroke-linecap="round" opacity=".55"></g>
+   <circle cx="330" cy="350" r="150" fill="rgba(216,140,70,.35)" stroke="#ffc25a" stroke-width="3"/>
+   <path d="M330 190 V510" stroke="#ffc25a" stroke-width="1.5" stroke-dasharray="4 6" opacity=".6"/>
+   <path d="M960 30 Q 560 350 960 670" fill="none" stroke="#ffd76a" stroke-width="4" stroke-dasharray="14 10"/>
+   <circle cx="760" cy="350" r="9" fill="#ffd76a" stroke="#000" stroke-width="2"/>
+   <g font-family="Comic Neue,sans-serif" font-weight="700" font-size="22" text-anchor="middle">
+    <text x="330" y="358" fill="#fff3d6">JUPITER</text>
+    <text x="330" y="60" fill="#bfe6ff">MAGNETIC FIELD LINES</text>
+    <text x="330" y="560" fill="#e0b8ff">RADIATION BELTS</text>
+    <text x="885" y="100" fill="#ffd76a" text-anchor="end">PIONEER 10'S PATH</text>
+    <text x="785" y="330" fill="#ffd76a" text-anchor="start" font-size="19">CLOSEST APPROACH</text>
+    <text x="785" y="384" fill="#ffd76a" text-anchor="start" font-size="17">4 DEC 1973 · ~130,000 KM</text>
+   </g>
+   <g transform="translate(-150 590)" font-family="Comic Neue,sans-serif" font-weight="700" font-size="14">
+    <rect width="300" height="115" rx="6" fill="rgba(6,8,20,.85)" stroke="#c78bff" stroke-width="2"/>
+    <text x="12" y="20" fill="#dfe6ff">RADIATION MEASURED (SCHEMATIC)</text>
+    <path d="M14 82 H288" stroke="#8fa0c9"/>
+    <path d="M14 80 C 90 78 115 70 135 48 C 145 30 155 30 165 48 C 185 70 210 78 288 80" stroke="#c78bff" stroke-width="3" fill="none"/>
+    <text x="150" y="104" fill="#dfe6ff" text-anchor="middle" font-size="12">↑ peak near closest approach</text>
+   </g>
+  </svg></div>
+  <p class="cap chap" style="left:10px;top:10px">Chapter 4 — The Invisible Danger</p>
+  <div class="tog" role="group" aria-label="View"><button id="vArt" class="on">Art</button><button id="vSci">Science</button></div>
+ </div>
+ <div class="panel b">
+  <img class="art kbi" src="pimg/4b.jpg" alt="Pioneer 10's instruments">
+  <p class="cap" style="left:10px;bottom:10px;max-width:80%">Jupiter's radiation was so intense it triggered false commands aboard Pioneer 10.</p>
+  <p class="bal" style="right:4%;top:5%;--tx:30%;--tr:25deg;max-width:56%">Not every danger can be seen. Some must be measured.</p>
+ </div>
+</section>
+
+<!-- P5 -->
+<section class="page pp5" data-t="Chapter 5 · The Golden Plaque">
+ <div class="panel a">
+  <img class="art kbi" src="pimg/5a.jpg" alt="Pioneer 10 with its plaque, Jupiter behind">
+  <p class="cap chap" style="left:10px;top:10px">Chapter 5 — The Golden Plaque</p>
+  <p class="bal" style="left:4%;bottom:5%;--tx:70%;--tr:-25deg;max-width:46%">If anyone ever finds me, perhaps they'll know where I came from.</p>
+ </div>
+ <div class="panel b" id="quiz" data-int>
+  <div class="qz">
+   <h3>Read the plaque</h3>
+   <p class="qh" id="qn">Question 1 of 3 — what does the glowing symbol mean?</p>
+   <svg class="qplq" viewBox="420 200 760 520" aria-hidden="true">
+    <rect x="420" y="200" width="760" height="520" rx="18" fill="url(#qg)"/>
+    <defs><linearGradient id="qg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f5d27a"/><stop offset="1" stop-color="#b8862c"/></linearGradient></defs>
+    <g fill="none" stroke="#2a1702" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+     <g class="qsym" data-s="h"><use href="#e-h"/></g><g class="qsym" data-s="pul"><use href="#e-pul"/></g>
+     <g class="qsym dim"><use href="#e-sc"/><use href="#e-hu"/></g><g class="qsym" data-s="ss"><use href="#e-ss"/></g>
+    </g>
+   </svg>
+   <div class="qm" id="qm"></div>
+   <p class="qr" id="qr" aria-live="polite"></p>
+   <button class="qa" id="qa">Show the answer</button>
+  </div>
+ </div>
+</section>
+
+<!-- P6 -->
+<section class="page pp6" data-t="Chapter 6 · The Last Signal · 23 January 2003">
+ <div class="panel a" id="sig" data-int>
+  <svg class="art" viewBox="0 0 1913 822" preserveAspectRatio="xMidYMid slice">
+   <image href="pimg/6a.jpg" width="1913" height="822"/>
+   <path id="beam" d="M1640 450 L222 262" stroke="#8fd3ff" stroke-width="3" fill="none" stroke-dasharray="4 10"/>
+   <circle id="pulse" r="9" fill="#bfe6ff" opacity="0"/>
+   <circle cx="222" cy="262" r="7" fill="#4ea3ff"/><circle cx="222" cy="262" r="16" fill="none" stroke="#4ea3ff" opacity=".6"/>
+   <g font-family="Comic Neue,sans-serif" font-weight="700" font-size="24" fill="#cfe3ff"><text x="246" y="300">EARTH</text><text x="120" y="190" fill="#ffd38a">SUN</text></g>
+  </svg>
+  <p class="cap chap" style="left:10px;top:10px">Chapter 6 — The Last Signal</p>
+  <div class="clock" id="clock"><span>Signal travel time</span><b id="ct">0 h 00 min</b><em id="cs">Pioneer 10 → Earth · not to scale</em></div>
+  <button class="qa replay" id="replay">Send the signal again</button>
+ </div>
+ <div class="panel b">
+  <img class="art kbi" src="pimg/6b.jpg" alt="A Deep Space Network dish listening at night">
+  <p class="cap" style="left:10px;top:10px;max-width:56%">23 January 2003. The last faint signal reaches Earth, from about 12.2 billion km away. A final attempt in 2006 hears nothing.</p>
+  <p class="bal up" style="right:4%;bottom:6%;--tx:30%;--tr:20deg;max-width:44%">I sent everything I could. Then the distance became silence.</p>
+ </div>
+</section>
+
+<!-- P7 -->
+<section class="page pp7" data-t="Chapter 7 · The Journey Continues">
+ <div class="panel a">
+  <img class="art drift7" src="pimg/7a.jpg" alt="Pioneer 10 drifting toward a distant red star">
+  <p class="cap chap" style="left:10px;top:10px">Chapter 7 — The Journey Continues</p>
+  <p class="cap" style="left:10px;bottom:10px;max-width:40%">Pioneer 10 is heading toward the red star Aldebaran. It should pass it in about two million years.</p>
+  <p class="bal" style="right:6%;bottom:16%;--tx:30%;--tr:30deg;max-width:30%">I may never speak again. But I am still carrying our story.</p>
+  <h2 class="endt7">Some journeys have no final page.</h2>
+ </div>
+</section>
+
+<!-- EPILOGUE -->
+<section class="page ppe" data-t="Epilogue · Someday…">
+ <div class="panel a">
+  <img class="art kbi" src="pimg/e1.jpg" alt="An alien studying the Pioneer plaque beside the old spacecraft">
+  <p class="cap chap" style="left:10px;top:10px">Epilogue — Someday…</p>
+  <p class="tagx">An imagined epilogue. This hasn't happened — yet.</p>
+ </div>
+ <div class="panel b">
+  <img class="art kbi" src="pimg/e2.jpg" alt="An alien hand touching the plaque">
+  <p class="cap" style="left:10px;bottom:10px;max-width:80%">…someone, somewhere, reads the map of home.</p>
+ </div>
+ <div class="panel c">
+  <div class="endb">
+   <a href="https://science.nasa.gov/mission/pioneer-10/" target="_blank" rel="noopener">Explore the real mission ↗</a>
+   <a class="ghost" href="index.html#jupiter">← Back to Jupiter</a>
+   <small>Pioneer 10: launched 2 March 1972 · Jupiter 4 December 1973 · last signal 23 January 2003.</small>
+  </div>
+ </div>
+</section>
+
+<nav class="bar">
+ <a href="index.html#jupiter">←<span>&nbsp;Back to Jupiter</span></a>
+ <div id="where">The Last Message</div>
+ <button id="prev" aria-label="Previous panel">◂</button>
+ <button id="next">Next<kbd>SPACE</kbd></button>
+</nav>
+
+<script>
+{
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const pages=$$('.page'),cover=$('#cover'),where=$('#where');
+let p=-1,c=0;const started=new Set();
+const panels=i=>[...pages[i].querySelectorAll('.panel')];
+function showPage(i){pages.forEach((pg,j)=>pg.classList.toggle('cur',j===i));p=i;where.textContent=pages[i].dataset.t}
+function reveal(el){el.classList.add('on');if(innerWidth<=720)el.scrollIntoView({behavior:'smooth',block:'center'});if(el.id&&FX[el.id]&&!started.has(el)){started.add(el);FX[el.id]()}}
+function next(){if(p<0){cover.classList.add('off');showPage(0);c=0}const ps=panels(p);if(c<ps.length){reveal(ps[c]);c++;return}if(p<pages.length-1){showPage(p+1);c=0;next()}}
+function prev(){if(p<0)return;const ps=panels(p);if(c>1){c--;ps[c].classList.remove('on');return}
+ if(p>0){showPage(p-1);c=panels(p).length}else{ps[0].classList.remove('on');c=0;pages[0].classList.remove('cur');cover.classList.remove('off');p=-1;where.textContent='The Last Message'}}
+addEventListener('keydown',e=>{
+ if(e.target.matches&&e.target.matches('input[type=range]')&&e.key.startsWith('Arrow'))return;
+ if(e.code==='Space'||e.key==='ArrowRight'||e.key==='Enter'){if(e.target.matches&&e.target.matches('button,a')&&e.key==='Enter')return;e.preventDefault();next()}
+ else if(e.key==='ArrowLeft'||e.key==='Backspace'){e.preventDefault();prev()}});
+$('#next').addEventListener('click',next);$('#prev').addEventListener('click',prev);cover.addEventListener('click',next);
+$$('.page').forEach(pg=>pg.addEventListener('click',e=>{if(e.target.closest('[data-int],a,button'))return;next()}));
+$$('[data-int]').forEach(el=>el.addEventListener('click',e=>e.stopPropagation()));
+
+/* P1 plaque */
+const PL={h:['Hydrogen','Two hydrogen atoms in different states. Their radio wave — 21 cm long — is the ruler and clock for every other measurement on the plaque.'],
+ pul:['Pulsar map','Lines to 14 pulsars, with their pulse rates written in binary. Together they pinpoint our Sun in the galaxy.'],
+ sc:['The spacecraft','Pioneer 10 itself, drawn behind the people so finders can judge our size.'],
+ hu:['A man and a woman','Humans drawn to scale. The raised hand is a gesture of goodwill.'],
+ ss:['Our solar system','The Sun and its planets. Pioneer\'s path leaves the third planet — Earth — and swings past Jupiter.']};
+$$('#plq .hs rect').forEach(r=>{r.setAttribute('tabindex',0);r.setAttribute('role','button');r.setAttribute('aria-label',PL[r.dataset.k][0]);
+ const go=()=>{const [t,d]=PL[r.dataset.k];$('#pinfo').innerHTML=`<b>${t}</b>${d}`;$('#pinfo').classList.add('on');$('#phint').classList.add('gone');$$('#plq .hs rect').forEach(x=>x.classList.toggle('sel',x===r))};
+ r.addEventListener('click',go);r.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();e.stopPropagation();go()}})});
+
+/* P2 trajectory */
+{const tr=$('#tr'),P=t=>{const r=260+(1350-260)*t,a=-0.98+0.86*t;return[r*Math.cos(a),320+r*Math.sin(a)]};
+ let d='';for(let i=0;i<=60;i++){const [x,y]=P(i/60);d+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)}$('#path').setAttribute('d',d);
+ const [jx,jy]=P(1);$('#jup').setAttribute('cx',jx);$('#jup').setAttribute('cy',jy);
+ const F=[[0,'2 March 1972','Launch. Earth is 1 AU from the Sun — about 150 million km.'],[.125,'1972','Pioneer 10 becomes the first spacecraft to fly beyond Mars.'],[.27,'15 July 1972','Into the asteroid belt — the first spacecraft ever to fly through it.'],[.6,'February 1973','Out of the belt, safely. It is mostly empty space.'],[.97,'4 December 1973','Jupiter — about 5.2 AU from the Sun.']];
+ const upd=()=>{const t=tr.value/1000,[x,y]=P(t);$('#ship').setAttribute('transform',`translate(${x} ${y})`);
+  let dd='';for(let i=0;i<=60*t;i++){const [a,b]=P(i/60);dd+=(i?'L':'M')+a.toFixed(1)+' '+b.toFixed(1)}dd+=`L${x} ${y}`;$('#done').setAttribute('d',dd);
+  const au=1+4.2*t;$('#dist').textContent=au.toFixed(1)+' AU · '+Math.round(au*150)+' million km';
+  let f=F[0];F.forEach(q=>{if(t>=q[0])f=q});$('#fact').innerHTML=`<b>${f[1]}</b>${f[2]}`};
+ tr.addEventListener('input',upd);upd();
+ const tp=$('#trip');tp.addEventListener('wheel',e=>{e.preventDefault();tr.value=Math.max(0,Math.min(1000,+tr.value+Math.sign(e.deltaY)*25));upd()},{passive:false});
+ let dr=false,lx=0;const sv=$('#tsv');
+ sv.addEventListener('pointerdown',e=>{dr=true;lx=e.clientX;sv.setPointerCapture(e.pointerId)});
+ sv.addEventListener('pointermove',e=>{if(!dr)return;tr.value=Math.max(0,Math.min(1000,+tr.value+(e.clientX-lx)*2));lx=e.clientX;upd()});
+ sv.addEventListener('pointerup',()=>dr=false);
+}
+
+/* P3 explore */
+{const sv=$('#jsv'),lens=$('#lens'),info=$('#jinfo');
+ const T={atm:['Atmosphere','Pioneer 10 took about 500 pictures of Jupiter\'s atmosphere.'],
+  grs:['Great Red Spot','A giant storm. Pioneer 10\'s pictures clearly showed landmarks like the Great Red Spot.'],
+  rad:['Radiation belts','Jupiter\'s radiation was so intense it triggered false commands aboard Pioneer 10, and damaged an instrument before it could photograph the moon Io.'],
+  mag:['Magnetic field','Pioneer 10 flew into Jupiter\'s magnetosphere. Its magnetic tail is almost 800 million km long — reaching all the way to Saturn\'s orbit.']};
+ let cur='';
+ sv.addEventListener('pointermove',e=>{const pt=sv.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const q=pt.matrixTransform(sv.getScreenCTM().inverse());
+  lens.setAttribute('cx',q.x);lens.setAttribute('cy',q.y);lens.setAttribute('opacity',1);
+  const r=Math.hypot(q.x-836,q.y-470),g=Math.hypot((q.x-1035)/110,(q.y-595)/70);
+  const k=g<1?'grs':r<435?'atm':r<600?'rad':'mag';
+  if(k!==cur){cur=k;info.innerHTML=`<b>${T[k][0]}</b>${T[k][1]}`;$('#ov-mag').classList.toggle('on',k==='mag');$('#ov-rad').classList.toggle('on',k==='rad')}});
+ sv.addEventListener('pointerleave',()=>lens.setAttribute('opacity',0));
+}
+
+/* P4 diagram */
+{const fl=$('#fl'),be=$('#belts'),CX=330,CY=350,R=150,NS='http://www.w3.org/2000/svg';
+ const line=(L,t0,t1,sd)=>{let d='';for(let k=0;k<=60;k++){const t=t0+(t1-t0)*k/60,r=L*R*Math.sin(t)**2;d+=(k?'L':'M')+(CX+sd*r*Math.sin(t)).toFixed(1)+' '+(CY-r*Math.cos(t)).toFixed(1)}return d};
+ [1.5,2.1,2.9,3.9].forEach(L=>{const t=Math.asin(Math.sqrt(1/L));[1,-1].forEach(sd=>{const p=document.createElementNS(NS,'path');p.setAttribute('d',line(L,t,Math.PI-t,sd));fl.appendChild(p)})});
+ [[1.75,30],[2.25,22]].forEach(([L,w])=>[1,-1].forEach(sd=>{const p=document.createElementNS(NS,'path');p.setAttribute('d',line(L,Math.PI*.36,Math.PI*.64,sd));p.setAttribute('stroke-width',w);be.appendChild(p)}));
+}
+/* P4 toggle */
+{const a=$('#vArt'),s=$('#vSci'),set=v=>{$('#rad').classList.toggle('sci-on',v);a.classList.toggle('on',!v);s.classList.toggle('on',v)};
+ a.addEventListener('click',()=>set(false));s.addEventListener('click',()=>set(true))}
+
+/* P5 quiz */
+{const Q=[['h','A hydrogen atom — its radio wave is the ruler and clock for the whole plaque'],
+ ['pul','A map: lines to 14 pulsars that pinpoint our Sun in the galaxy'],
+ ['ss','Our solar system — the craft left the third planet, Earth']];
+ const ALL=Q.map(q=>q[1]);let i=0,score=0,tries=0,lock=false;const qm=$('#qm'),qr=$('#qr');
+ function show(){if(i>=Q.length){$('#qn').textContent=`Done — ${score} of 3 on the first try.`;$$('.qsym').forEach(g=>g.classList.remove('dim','hot'));qm.innerHTML='';qr.textContent='Now you can read the map of home.';$('#qa').style.display='none';return}
+  tries=0;lock=false;$('#qn').textContent=`Question ${i+1} of 3 — what does the glowing symbol mean?`;qr.textContent='';
+  $$('.qsym').forEach(g=>{const on=g.dataset.s===Q[i][0];g.classList.toggle('hot',on);g.classList.toggle('dim',!on)});
+  qm.innerHTML=ALL.map((t,k)=>`<button data-k="${k}">${t}</button>`).join('')}
+ function right(btn){lock=true;btn.classList.add('done');if(!tries)score++;qr.textContent='Correct!';setTimeout(()=>{i++;show()},1400)}
+ qm.addEventListener('click',e=>{const bt=e.target.closest('button');if(!bt||lock)return;
+  if(ALL[bt.dataset.k]===Q[i][1])right(bt);else{tries++;bt.classList.add('no');qr.textContent='Not this one — try again.';setTimeout(()=>bt.classList.remove('no'),500)}});
+ $('#qa').addEventListener('click',()=>{if(lock||i>=Q.length)return;tries++;right(qm.querySelector(`[data-k="${ALL.indexOf(Q[i][1])}"]`))});
+ show()}
+
+/* P6 signal */
+const FX={sig(){
+ const beam=$('#beam'),pl=$('#pulse'),ct=$('#ct'),cs=$('#cs'),L=beam.getTotalLength(),D=7000;
+ function run(){beam.style.opacity=1;beam.style.strokeWidth=3;pl.setAttribute('opacity',1);cs.textContent='Pioneer 10 → Earth · not to scale';$('#replay').classList.remove('on');
+  const t0=performance.now();(function f(now){const t=Math.min((now-t0)/D,1),q=beam.getPointAtLength(L*t);
+   pl.setAttribute('cx',q.x);pl.setAttribute('cy',q.y);beam.style.strokeWidth=(3-2.4*t).toFixed(2);
+   const m=Math.round(680*t);ct.textContent=`${Math.floor(m/60)} h ${String(m%60).padStart(2,'0')} min`;
+   if(t<1)requestAnimationFrame(f);else{pl.setAttribute('opacity',0);cs.textContent='Received · 23 January 2003. Then — silence.';beam.style.transition='opacity 3s';beam.style.opacity=0;$('#replay').classList.add('on')}})(t0)}
+ $('#replay').addEventListener('click',()=>{beam.style.transition='none';run()});setTimeout(run,900)}};
+}
+</script>
+</body>
+</html>
