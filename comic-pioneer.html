@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="description" content="Interactive web comics about NASA's Surveyor 3, Pioneer 10 and Kepler, made for the NASA Space Apps Challenge 2026.">
+<meta name="si-disclosure" content="Illustrations are SI-generated (image generation model) and watermarked. Website code and English captions were written with the help of Claude (Anthropic), a large language model. Mission facts come from NASA mission pages.">
+<!-- SI DISCLOSURE: All comic illustrations and spacecraft images on this site were generated with an SI image-generation tool and carry a visible "SI-generated" watermark. The HTML/CSS/JavaScript code (including the WebGL planet shaders) and the English captions were written with the help of Claude (Anthropic). Mission facts are taken from NASA mission pages listed in the project References. -->
+
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>The Last Message</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -200,6 +204,8 @@ kbd{font:inherit;border:1px solid currentColor;padding:1px 5px;margin-left:8px;f
 .panel.on .endt7{opacity:1}
 .tagx{position:absolute;z-index:2;right:10px;bottom:10px;margin:0;background:#000;color:#fff;border:2px dashed var(--y);padding:6px 10px;font:700 12px 'Comic Neue',sans-serif;text-transform:uppercase}
 @media(max-width:720px){.pp2 .a,.pp2 .b{height:80vh}.qcols{grid-template-columns:1fr}.fact{width:70%}.clock{min-width:0}.clock b{font-size:28px}.rgraph{display:none}}
+.panel.wmhid::after{content:"SI-generated image";position:absolute;right:0;bottom:0;z-index:5;background:#000;color:#fff;font:700 11px/1 'Comic Neue',system-ui,sans-serif;letter-spacing:.5px;padding:9px 10px 9px 14px;border-top-left-radius:6px;pointer-events:none}
+.sinote{flex-basis:100%;text-align:center;color:#8f8a7c;font-size:12px;margin:0}
 </style>
 </head>
 <body>
@@ -427,6 +433,7 @@ kbd{font:inherit;border:1px solid currentColor;padding:1px 5px;margin-left:8px;f
    <a href="https://science.nasa.gov/mission/pioneer-10/" target="_blank" rel="noopener">Explore the real mission ↗</a>
    <a class="ghost" href="index.html#jupiter">← Back to Jupiter</a>
    <small>Pioneer 10: launched 2 March 1972 · Jupiter 4 December 1973 · last signal 23 January 2003.</small>
+   <small class="sinote">Illustrations: SI-generated with an image-generation tool (watermarked). Code and captions: written with the help of Claude (Anthropic). Facts: NASA mission pages.</small>
   </div>
  </div>
 </section>
@@ -534,6 +541,16 @@ const FX={sig(){
    if(t<1)requestAnimationFrame(f);else{pl.setAttribute('opacity',0);cs.textContent='Received · 23 January 2003. Then — silence.';beam.style.transition='opacity 3s';beam.style.opacity=0;$('#replay').classList.add('on')}})(t0)}
  $('#replay').addEventListener('click',()=>{beam.style.transition='none';run()});setTimeout(run,900)}};
 }
+
+/* show an on-screen SI badge only where the watermark inside the image file is cropped away */
+{const chk=()=>document.querySelectorAll('.panel').forEach(pn=>{const pr=pn.getBoundingClientRect();if(!pr.width)return;let hid=false,any=false;
+ pn.querySelectorAll('img.art,image').forEach(el=>{any=true;let x1,y1;
+  if(el.tagName.toLowerCase()==='image'){const r=el.getBoundingClientRect();x1=r.right;y1=r.bottom}
+  else{const nw=el.naturalWidth,nh=el.naturalHeight;if(!nw)return;const cs=getComputedStyle(el),pos=cs.objectPosition.split(' ').map(v=>parseFloat(v)/100);
+   const s=Math.max(pr.width/nw,pr.height/nh),cw=nw*s,ch=nh*s;x1=pr.left+(pr.width-cw)*(isNaN(pos[0])?.5:pos[0])+cw;y1=pr.top+(pr.height-ch)*(isNaN(pos[1])?.5:pos[1])+ch}
+  if(x1>pr.right+4||y1>pr.bottom+4)hid=true});
+ pn.classList.toggle('wmhid',any&&hid)});
+ addEventListener('load',chk);addEventListener('resize',chk);document.querySelectorAll('img').forEach(i=>i.addEventListener('load',chk));setInterval(chk,1500);}
 </script>
 </body>
 </html>

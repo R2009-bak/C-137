@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="description" content="Interactive web comics about NASA's Surveyor 3, Pioneer 10 and Kepler, made for the NASA Space Apps Challenge 2026.">
+<meta name="si-disclosure" content="Illustrations are SI-generated (image generation model) and watermarked. Website code and English captions were written with the help of Claude (Anthropic), a large language model. Mission facts come from NASA mission pages.">
+<!-- SI DISCLOSURE: All comic illustrations and spacecraft images on this site were generated with an SI image-generation tool and carry a visible "SI-generated" watermark. The HTML/CSS/JavaScript code (including the WebGL planet shaders) and the English captions were written with the help of Claude (Anthropic). Mission facts are taken from NASA mission pages listed in the project References. -->
+
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>The One Who Waited</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -120,6 +124,8 @@ kbd{font:inherit;border:1px solid currentColor;padding:1px 5px;margin-left:8px;f
  #where{font-size:15px}
 }
 @media(prefers-reduced-motion:reduce){.panel{transition:opacity .3s;filter:none;transform:none}.kb,.flame,.dust{animation:none!important}}
+.panel.wmhid::after{content:"SI-generated image";position:absolute;right:0;bottom:0;z-index:5;background:#000;color:#fff;font:700 11px/1 'Comic Neue',system-ui,sans-serif;letter-spacing:.5px;padding:9px 10px 9px 14px;border-top-left-radius:6px;pointer-events:none}
+.sinote{flex-basis:100%;text-align:center;color:#8f8a7c;font-size:12px;margin:0}
 </style>
 </head>
 <body>
@@ -382,6 +388,7 @@ kbd{font:inherit;border:1px solid currentColor;padding:1px 5px;margin-left:8px;f
    <a href="https://science.nasa.gov/mission/surveyor-3/" target="_blank" rel="noopener">Explore the real mission ↗</a>
    <a class="ghost" href="index.html#moon">← Back to the Moon</a>
    <small>Real photos of the Apollo 12 visit are on NASA's Surveyor 3 mission page.</small>
+   <small class="sinote">Illustrations: SI-generated with an image-generation tool (watermarked). Code and captions: written with the help of Claude (Anthropic). Facts: NASA mission pages.</small>
   </div>
  </div>
 </section>
@@ -490,6 +497,16 @@ const FX={
   setTimeout(()=>{if(!user)tg=1},2500)}
 };
 }
+
+/* show an on-screen SI badge only where the watermark inside the image file is cropped away */
+{const chk=()=>document.querySelectorAll('.panel').forEach(pn=>{const pr=pn.getBoundingClientRect();if(!pr.width)return;let hid=false,any=false;
+ pn.querySelectorAll('img.art,image').forEach(el=>{any=true;let x1,y1;
+  if(el.tagName.toLowerCase()==='image'){const r=el.getBoundingClientRect();x1=r.right;y1=r.bottom}
+  else{const nw=el.naturalWidth,nh=el.naturalHeight;if(!nw)return;const cs=getComputedStyle(el),pos=cs.objectPosition.split(' ').map(v=>parseFloat(v)/100);
+   const s=Math.max(pr.width/nw,pr.height/nh),cw=nw*s,ch=nh*s;x1=pr.left+(pr.width-cw)*(isNaN(pos[0])?.5:pos[0])+cw;y1=pr.top+(pr.height-ch)*(isNaN(pos[1])?.5:pos[1])+ch}
+  if(x1>pr.right+4||y1>pr.bottom+4)hid=true});
+ pn.classList.toggle('wmhid',any&&hid)});
+ addEventListener('load',chk);addEventListener('resize',chk);document.querySelectorAll('img').forEach(i=>i.addEventListener('load',chk));setInterval(chk,1500);}
 </script>
 </body>
 </html>
